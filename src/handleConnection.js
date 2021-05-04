@@ -3,7 +3,6 @@ const fs = require("fs");
 const { ducos1, xxhash } = require("./mining");
 const { poolVersion } = require("../config/config.json")
 const bans = require("../config/bans.json");
-const poolRewards = require("../config/poolRewards.json");
 
 const handle = (conn) => {
     console.log(`New incomming connection: ${conn.remoteAddress}`);
@@ -55,9 +54,6 @@ const handle = (conn) => {
                 fs.writeFileSync("./config/bans.json", JSON.stringify(bans, null, 4));
                 return conn.destroy();
             }
-
-            let diff = data[2] ? data[2] : "NET"; // check if a custom diff was provided
-            if (!poolRewards.hasOwnProperty(diff)) diff = "NET";
 
             xxhash(conn, data, mainListener);
         }
