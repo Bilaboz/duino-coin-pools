@@ -78,7 +78,7 @@ async function generateJobs() {
     }
 
     console.log("Finished generating jobs");
-    setTimeout(generateJobs, jobGenerationgDelay);
+    setTimeout(generateJobs, jobGenerationDelay);
 }
 
 function getPregeneratedJob(diff) {

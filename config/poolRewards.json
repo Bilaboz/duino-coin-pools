@@ -30,27 +30,27 @@
         "kolka_decrease_perc": 80
     },
     "ESP32": {
-        "difficulty": 500,
-        "reward": 0.004,
-        "max_hashrate": 13000,
+        "difficulty": 2000,
+        "reward": 0.00375,
+        "max_hashrate": 16000,
         "kolka_decrease_perc": 96
     },
     "ESP8266": {
-        "difficulty": 500,
-        "reward": 0.00375,
+        "difficulty": 1000,
+        "reward": 0.0045,
         "max_hashrate": 11000,
         "kolka_decrease_perc": 96
     },
     "DUE": {
-        "difficulty": 500,
+        "difficulty": 1000,
         "reward": 0.003,
         "max_hashrate": 7000,
         "kolka_decrease_perc": 96
     },
     "AVR": {
-        "difficulty": 5,
-        "reward": 0.0051,
-        "max_hashrate": 180,
+        "difficulty": 7,
+        "reward": 0.0065,
+        "max_hashrate": 170,
         "kolka_decrease_perc": 96
     }
 }
