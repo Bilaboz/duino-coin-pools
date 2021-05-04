@@ -5,7 +5,7 @@ const kolka = require("./kolka");
 
 const {
     preGenJobCount,
-    jobGenerationgDelay,
+    jobGenerationDelay,
     initialBlockHash,
     expectedSharetime,
     blockProbability,
