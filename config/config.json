@@ -11,7 +11,7 @@
     "serverPort": 2811,
 
     "preGenJobCount": 1000,
-    "jobGenerationgDelay": 30000,
+    "jobGenerationDelay": 30000,
 
     "initialBlockHash": "05b7406b3909071b2d85b2d2958ad07a0d52bd12",
     "expectedSharetime": 12,
