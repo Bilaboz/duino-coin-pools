@@ -11,7 +11,7 @@ const {
     blockProbability,
     blockReward,
     updateMinersStatsEvery
-    } = require("./config/config.json");
+    } = require("../config/config.json");
 
 let lastBlockhash = initialBlockHash;
 
@@ -92,7 +92,7 @@ function getPregeneratedJob(diff) {
 }
 
 function getDiff(textDiff) {
-    const poolRewards = require("./config/poolRewards.json");
+    const poolRewards = require("../config/poolRewards.json");
     let { difficulty } = poolRewards[textDiff];
     return difficulty;
 }
@@ -107,7 +107,7 @@ function receiveData(conn) {
 }
 
 async function ducos1(conn, data, mainListener) {
-    const poolRewards = require("./config/poolRewards.json");
+    const poolRewards = require("../config/poolRewards.json");
 
     let job, random, newHash, reqDifficulty, sharetime;
     let isFirstShare = true;
@@ -260,7 +260,7 @@ async function ducos1(conn, data, mainListener) {
 }
 
 async function xxhash(conn, data, mainListener) {
-    const poolRewards = require("./config/poolRewards.json");
+    const poolRewards = require("../config/poolRewards.json");
 
     let job, random, newHash, reqDifficulty, sharetime;
     let isFirstShare = true;

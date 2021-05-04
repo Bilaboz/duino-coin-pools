@@ -4,7 +4,7 @@ const handle = require("./handleConnection");
 const sync = require("./sync");
 const mining = require("./mining");
 
-const { port, host } = require("./config/config.json");
+const { port, host } = require("../config/config.json");
 
 sync.login();
 sync.updatePoolReward();

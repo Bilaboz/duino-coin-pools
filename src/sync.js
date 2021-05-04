@@ -4,7 +4,7 @@ const fs = require("fs");
 const osu = require("node-os-utils");
 const { exit } = require("process");
 
-const { poolID, poolVersion, port, serverIP, serverPort } = require("./config/config.json");
+const { poolID, poolVersion, port, serverIP, serverPort } = require("../config/config.json");
 let ip;
 
 async function login() {

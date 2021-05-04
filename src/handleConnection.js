@@ -1,9 +1,9 @@
 const fs = require("fs");
 
 const { ducos1, xxhash } = require("./mining");
-const { poolVersion } = require("./config/config.json")
-const bans = require("./config/bans.json");
-const poolRewards = require("./config/poolRewards.json");
+const { poolVersion } = require("../config/config.json")
+const bans = require("../config/bans.json");
+const poolRewards = require("../config/poolRewards.json");
 
 const handle = (conn) => {
     console.log(`New incomming connection: ${conn.remoteAddress}`);
