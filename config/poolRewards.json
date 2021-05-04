@@ -1,0 +1,56 @@
+{
+    "EXTREME": {
+        "difficulty": 950000,
+        "reward": 0,
+        "max_hashrate": 999999999,
+        "kolka_decrease_perc": 80
+    },
+    "XXHASH": {
+        "difficulty": 50000,
+        "reward": 0.0003,
+        "max_hashrate": 4500000,
+        "kolka_decrease_perc": 80
+    },
+    "NET": {
+        "difficulty": 75000,
+        "reward": 0.0015811,
+        "max_hashrate": 1000000,
+        "kolka_decrease_perc": 80
+    },
+    "MEDIUM": {
+        "difficulty": 50000,
+        "reward": 0.0012811,
+        "max_hashrate": 500000,
+        "kolka_decrease_perc": 80
+    },
+    "LOW": {
+        "difficulty": 5000,
+        "reward": 0.0022811,
+        "max_hashrate": 200000,
+        "kolka_decrease_perc": 80
+    },
+    "ESP32": {
+        "difficulty": 500,
+        "reward": 0.004,
+        "max_hashrate": 13000,
+        "kolka_decrease_perc": 96
+    },
+    "ESP8266": {
+        "difficulty": 500,
+        "reward": 0.00375,
+        "max_hashrate": 11000,
+        "kolka_decrease_perc": 96
+    },
+    "DUE": {
+        "difficulty": 500,
+        "reward": 0.003,
+        "max_hashrate": 7000,
+        "kolka_decrease_perc": 96
+    },
+    "AVR": {
+        "difficulty": 5,
+        "reward": 0.0051,
+        "max_hashrate": 180,
+        "kolka_decrease_perc": 96
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "poolName": "Bilaboz nodejs pool",
+    "poolPassword": "",
+    "poolID": "",
+    "poolVersion": "0.1",
+
+    "host": "localhost",
+    "port": 6000,
+
+    "serverIP": "localhost",
+    "serverPort": 2811,
+
+    "preGenJobCount": 1000,
+    "jobGenerationgDelay": 30000,
+
+    "initialBlockHash": "05b7406b3909071b2d85b2d2958ad07a0d52bd12",
+    "expectedSharetime": 12,
+    "updateMinersStatsEvery": 1,
+    "blockProbability": 1000000,
+    "blockReward": 7.7
+}
