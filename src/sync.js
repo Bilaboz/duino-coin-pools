@@ -142,21 +142,20 @@ async function sync() {
     });
 
     socket.on("data", (data) => {
-        console.log(data)
-        
         if (data.startsWith("2")) {
             socket.write(`PoolLogin,${JSON.stringify(loginInfos)}`);  
         } else if (data === "LoginOK") {
             socket.write("PoolPreSync");
         } else if (data === "OK") {
             socket.write(JSON.stringify(syncData));
-
-            console.log(syncData)
+            //console.log(syncData)
         } else if (data.startsWith("SyncOK")) {
             socket.end();
             Object.keys(mining.stats.balancesToUpdate).forEach(k =>{
                 mining.stats.balancesToUpdate[k] = 0;
             });
+        } else {
+            console.log(`Unknown error, server returned ${data} in sync`);
         }
     });
 

@@ -5,7 +5,7 @@ const { poolVersion } = require("../config/config.json")
 const bans = require("../config/bans.json");
 
 const handle = (conn) => {
-    console.log(`New incomming connection: ${conn.remoteAddress}`);
+    console.log(`New incoming connection: ${conn.remoteAddress}`);
     conn.setEncoding("utf8");
     // generate a unique id for the connection
     conn.id = Math.random().toString(36).substr(2, 9) + Date.now();
