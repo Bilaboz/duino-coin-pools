@@ -1,14 +1,14 @@
 const fs = require("fs");
 
-const { ducos1, xxhash } = require("./mining");
+const { miningHandler } = require("./mining");
 const { poolVersion } = require("../config/config.json")
 const bans = require("../config/bans.json");
 
 const handle = (conn) => {
-    console.log(`New incoming connection: ${conn.remoteAddress}`);
     conn.setEncoding("utf8");
     // generate a unique id for the connection
-    conn.id = Math.random().toString(36).substr(2, 9) + Date.now();
+    conn.id = Math.random().toString(36).substr(2, 9);
+    console.log(`New incoming connection: ${conn.remoteAddress}#${conn.id}`);
 
     conn.write(poolVersion);
 
@@ -42,7 +42,7 @@ const handle = (conn) => {
                 return conn.destroy();
             }
 
-            ducos1(conn, data, mainListener);
+            miningHandler(conn, data, mainListener, false);
         } else if (data[0] === "JOBXX") {
             if (!data[1]) {  // check if username was provided
                 conn.write("NO,Not enough data");
@@ -55,7 +55,7 @@ const handle = (conn) => {
                 return conn.destroy();
             }
 
-            xxhash(conn, data, mainListener);
+            miningHandler(conn, data, mainListener, true);
         }
     })
 }

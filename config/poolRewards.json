@@ -47,10 +47,16 @@
         "max_hashrate": 7000,
         "kolka_decrease_perc": 96
     },
+    "ARM": {
+        "difficulty": 500,
+        "reward": 0.003,
+        "max_hashrate": 5000,
+        "kolka_decrease_perc": 96
+    },
     "AVR": {
-        "difficulty": 7,
-        "reward": 0.0065,
-        "max_hashrate": 170,
+        "difficulty": 6,
+        "reward": 0.005,
+        "max_hashrate": 210,
         "kolka_decrease_perc": 96
     }
 }

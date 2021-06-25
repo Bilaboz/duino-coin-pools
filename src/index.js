@@ -1,14 +1,16 @@
 const net = require("net");
 
-const handle = require("./handleConnection");
+const handle = require("./connectionHandler");
 const sync = require("./sync");
 const mining = require("./mining");
 
 const { port, host } = require("../config/config.json");
 
+let connections = 0;
+
 sync.login();
 sync.updatePoolReward();
-mining.generateJobs();
+//mining.generateJobs(); avr mining is disabled for pools
 
 const server = net.createServer(handle);
 
@@ -31,3 +33,13 @@ process.once("SIGTERM", async () => { // catch SIGTERM
     console.log("done");
     process.exit(0);
 })
+
+setInterval(() => {
+    server.getConnections((error, count) => {
+        if (!error) {
+            connections = count;
+        }
+    });
+}, 30000);
+
+module.exports = { connections };

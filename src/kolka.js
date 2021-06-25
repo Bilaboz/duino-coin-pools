@@ -5,6 +5,7 @@
 */
 
 const multiplier = 1;
+const highestPCdiff = 350000;
 
 function V1(baseReward, sharetime, difficulty, workers, penalty=false) {
     let output;
@@ -20,8 +21,8 @@ function V1(baseReward, sharetime, difficulty, workers, penalty=false) {
                 + difficulty / 100000000;
     }
 
-    if (difficulty > 600) {
-        output += output * (Math.pow(pcMiningPercentage, (workers-1)));
+    if (difficulty > highestPCdiff) {
+        output += output * (Math.pow(pcMiningPercentage, (workers-1))) / 177;
     } else {
         output += output * (Math.pow(avrMiningPercentage, (workers-1)));
     }
@@ -31,7 +32,8 @@ function V1(baseReward, sharetime, difficulty, workers, penalty=false) {
 
 function V2(currDiff) {
     switch(currDiff) {
-        case "AVR": return "ESP8266";
+        case "AVR": return "ARM";
+        case "ARM": return "ESP8266"
         case "ESP8266": return "ESP32"
         case "ESP32": return "LOW";
         case "LOW": return "MEDIUM";
@@ -54,7 +56,7 @@ function V3 (sharetime, expectedSharetime, difficulty) {
         }
     }
 
-    if (newDifficulty <= 1000) newDifficulty = 1000;
+    if (newDifficulty <= 5000) newDifficulty = 5000;
 
     return parseInt(newDifficulty);
 }

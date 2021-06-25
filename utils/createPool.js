@@ -1,6 +1,11 @@
-const poolPassword = ""
+const net = require("net");
+const axios = require("axios"); 
 
-async function addPool() {
+const poolPassword = ""
+const serverPort = 2811;
+const serverIP = "localhost"
+
+async function createPool() {
     const res = await axios.get("https://api.ipify.org/");
     if (!res.data) {
         console.log("Error: can't get the pool IP");
@@ -9,10 +14,10 @@ async function addPool() {
     const ip = res.data;
 
     const loginInfos = {
-        name: "PUT YOUR POOL NAME HERE",
+        name: "",
         host: ip,
-        port: "PUT YOUR PORT HERE",
-        identifier: "PUT YOUR POOL ID HERE", // put something like your hwid, this is like a password
+        port: "",
+        identifier: "", // put something like your hwid, this is like a password
         hidden: "ok"
     };
 
@@ -21,12 +26,12 @@ async function addPool() {
     socket.connect(serverPort, serverIP);
 
     socket.on("error", (err) => {
-        console.log(`Socket error at addPool: ${err}`);
+        console.log(`Socket error at createPool: ${err}`);
         exit(1);
     });
 
     socket.on("timeout", () => {
-        console.log("Socket timeout at addPool");
+        console.log("Socket timeout at createPool");
         exit(1);
     });
 
@@ -37,10 +42,10 @@ async function addPool() {
         } else if (data === "LoginOK") {
             console.log("Pool successfully added");
         } else {
-            console.log(`Unknown error, server returned ${data} in addPool`);
+            console.log(`Unknown error, server returned ${data} in createPool`);
             exit(data);
         }
     });
 }
 
-addPool();
+createPool();
