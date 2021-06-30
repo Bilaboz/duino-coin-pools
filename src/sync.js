@@ -107,6 +107,7 @@ async function sync() {
 
     const mining = require("./mining");
     const { connections } = require("./index");
+    console.log(connections)
 
     const cpuUsage = await osu.cpu.usage();
     let ramUsage =  await osu.mem.info();
@@ -118,31 +119,34 @@ async function sync() {
     const balancesToUpdate = mining.stats.balancesToUpdate;
 
     const ducos1Miners = Object.values(mining.stats.minersStats).filter((miner) => {
-        return miner.algo === "DUCO-S1";
+        return miner.Algorithm === "DUCO-S1";
     })
 
     const xxhashMiners = Object.values(mining.stats.minersStats).filter((miner) => {
-        return miner.algo === "XXHASH";
+        return miner.Algorithm === "XXHASH";
     })
 
-    console.log(ducos1Miners)
-    if (ducos1Miners.length > 0) {
+    if (ducos1Miners.length > 1) {
         ducos1Hashrate = ducos1Miners.reduce((a, b) => {
-            return a.hashrate + b.hashrate;
+            return a.Hashrate + b.Hashrate;
         })
+    } else if (ducos1Miners.length > 0) {
+        ducos1Hashrate = ducos1Miners[0].Hashrate;
     }
 
     if (xxhashMiners.length > 0) {
         xxhashHashrate = xxhashMiners.reduce((a, b) => {
-            return a.hashrate + b.hashrate;
+            return a.Hashrate + b.Hashrate;
         })
+    } else if (xxhashMiners.length > 0) {
+        xxhashHashrate = xxhashMiners[0].Hashrate;
     }
 
     const syncData = {
         rewards: balancesToUpdate,
         blocks: {
             "blockIncrease": blockIncrease,
-            "bigBlocks": mining.blocks
+            "bigBlocks": mining.stats.blocks
         },
         cpu: cpuUsage,
         ram: ramUsage,
@@ -183,6 +187,7 @@ async function sync() {
         } else if (data === "OK") {
             socket.write(JSON.stringify(syncData));
             console.log(syncData)
+            console.log(JSON.stringify(syncData, null, 4))
         } else if (data.startsWith("SyncOK")) {
             socket.end();
             Object.keys(mining.stats.balancesToUpdate).forEach(k =>{
