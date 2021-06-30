@@ -107,7 +107,6 @@ async function sync() {
 
     const mining = require("./mining");
     const { connections } = require("./index");
-    console.log(connections)
 
     const cpuUsage = await osu.cpu.usage();
     let ramUsage =  await osu.mem.info();
@@ -186,8 +185,8 @@ async function sync() {
             socket.write("PoolPreSync");
         } else if (data === "OK") {
             socket.write(JSON.stringify(syncData));
-            console.log(syncData)
-            console.log(JSON.stringify(syncData, null, 4))
+            //console.log(syncData)
+            //console.log(JSON.stringify(syncData, null, 4))
         } else if (data.startsWith("SyncOK")) {
             socket.end();
             Object.keys(mining.stats.balancesToUpdate).forEach(k =>{

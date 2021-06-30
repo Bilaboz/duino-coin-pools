@@ -252,7 +252,6 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
         let maxHashrate = poolRewards[reqDifficulty]["max_hashrate"];
         let reward;
         if (hashrate > maxHashrate && acceptedShares > 2) {
-            console.log("rejected too high hashrate")
             rejectedShares++;
 
             reward = 0; //reward = kolka.V1(0, sharetime, 0, 0, true);
@@ -287,7 +286,6 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
                 conn.write("GOOD\n");
             }
         } else {
-            console.log("rejected bad")
             rejectedShares++;
 
             //reward = kolka.V1(0, sharetime, 0, 0, true);

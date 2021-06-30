@@ -38,7 +38,6 @@ setInterval(() => {
     server.getConnections((error, count) => {
         if (!error) {
             connections = count;
-            
         }
     });
 }, 30000);
