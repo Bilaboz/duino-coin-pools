@@ -11,6 +11,7 @@ let connections = 0;
 sync.login();
 sync.updatePoolReward();
 //mining.generateJobs(); avr mining is disabled for pools
+require("./dashboard");
 
 const server = net.createServer(handle);
 

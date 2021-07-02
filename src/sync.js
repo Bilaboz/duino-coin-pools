@@ -94,7 +94,7 @@ function updatePoolReward() {
         });
     
         response.data.on("end", () => {
-            console.log("Updated poolRewards.json")
+            //console.log("Updated poolRewards.json")
         });
     });
 
@@ -141,6 +141,8 @@ async function sync() {
         xxhashHashrate = xxhashMiners[0].Hashrate;
     }
 
+    fs.writeFileSync(__dirname + "/../dashboard/workers.json", JSON.stringify(mining.stats.minersStats, null, 4));
+
     const syncData = {
         rewards: balancesToUpdate,
         blocks: {
@@ -150,7 +152,6 @@ async function sync() {
         cpu: cpuUsage,
         ram: ramUsage,
         stats: {
-            "workers": mining.stats.minersStats,
             "connections": connections,
             hashrate: {
                 "ducos1": ducos1Hashrate,

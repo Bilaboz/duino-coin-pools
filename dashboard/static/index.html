@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css">
+    <script src="/script.js" defer></script>
+    <title>Pool Dashboard</title>
+</head>
+
+<body class="has-text-centered">
+    <section class="section box">
+        <h1 class="notification title is-info">Pool Dashboard</h1>
+    </section>
+
+    <section class="box section">
+        <p class="notification has-background-link-light is-size-5">
+            Connections: <br><strong id="connections">0</strong>
+        </p>
+    </section>
+
+    <section class="box section">
+        <div class="notification has-background-link-light">
+            <p class="is-size-5">
+                CPU:<br><strong id="cpu">0%</strong>
+            </p>
+            <br>
+            <p class="is-size-5">
+                RAM:<br><strong id="ram">0%</strong>
+            </p>
+        </div>
+    </section>
+
+    <a class="button is-primary is-medium" href="/workers">workers.json</a>
+
+    <br><br>
+</body>
+</html>
