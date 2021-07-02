@@ -6,7 +6,7 @@ const mining = require("./mining");
 
 const { port, host } = require("../config/config.json");
 
-let connections = 0;
+connections = 0;
 
 sync.login();
 sync.updatePoolReward();
@@ -41,6 +41,6 @@ setInterval(() => {
             connections = count;
         }
     });
-}, 30000);
+}, 10000);
 
-module.exports = { connections };
+//module.exports = { connections };

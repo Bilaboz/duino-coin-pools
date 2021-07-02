@@ -23,7 +23,7 @@ let jobs = {
     "esp8266": [],
 };
 
-let blocks = [];
+globalBlocks = [];
 let workers = {};
 let minersStats = {};
 let balancesToUpdate = {};
@@ -279,7 +279,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
                     hash: newHash.toString()
                 }
 
-                blocks.push(blockInfos);
+                globalBlocks.push(blockInfos);
                 console.log("Block found by " + username);
                 conn.write("BLOCK\n");
             } else {
@@ -313,5 +313,5 @@ module.exports.stats = {
     minersStats,
     balancesToUpdate,
     globalShares,
-    blocks
+    globalBlocks
 }

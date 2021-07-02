@@ -1,16 +1,17 @@
 const express = require("express");
 const osu = require("node-os-utils");
+const path = require("path");
 
 const app = express();
 
-app.use(express.static(__dirname + "/../dashboard/static"));
+app.use(express.static(path.resolve(__dirname + "/../dashboard/static")));
 
 app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/../dashboard/static/index.html");
+    res.sendFile(path.resolve(__dirname + "/../dashboard/static/index.html"));
 })
 
 app.get("/workers", (req, res) => {
-    res.sendFile(__dirname + "/../dashboard/workers.json");
+    res.sendFile(path.resolve(__dirname + "/../dashboard/workers.json"));
 })
 
 app.get("/statistics", async (req, res) => {

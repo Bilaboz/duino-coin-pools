@@ -102,11 +102,8 @@ function updatePoolReward() {
 }
 
 async function sync() {
-    let ducos1Hashrate = 0;
-    let xxhashHashrate = 0;
-
     const mining = require("./mining");
-    const { connections } = require("./index");
+    require("./index");
 
     const cpuUsage = await osu.cpu.usage();
     let ramUsage =  await osu.mem.info();
@@ -115,31 +112,9 @@ async function sync() {
     const blockIncrease = mining.stats.globalShares.increase;
     mining.stats.globalShares.increase = 0;
 
+    const bigBlocks = mining.stats.globalBlocks;
+
     const balancesToUpdate = mining.stats.balancesToUpdate;
-
-    const ducos1Miners = Object.values(mining.stats.minersStats).filter((miner) => {
-        return miner.Algorithm === "DUCO-S1";
-    })
-
-    const xxhashMiners = Object.values(mining.stats.minersStats).filter((miner) => {
-        return miner.Algorithm === "XXHASH";
-    })
-
-    if (ducos1Miners.length > 1) {
-        ducos1Hashrate = ducos1Miners.reduce((a, b) => {
-            return a.Hashrate + b.Hashrate;
-        })
-    } else if (ducos1Miners.length > 0) {
-        ducos1Hashrate = ducos1Miners[0].Hashrate;
-    }
-
-    if (xxhashMiners.length > 0) {
-        xxhashHashrate = xxhashMiners.reduce((a, b) => {
-            return a.Hashrate + b.Hashrate;
-        })
-    } else if (xxhashMiners.length > 0) {
-        xxhashHashrate = xxhashMiners[0].Hashrate;
-    }
 
     fs.writeFileSync(__dirname + "/../dashboard/workers.json", JSON.stringify(mining.stats.minersStats, null, 4));
 
@@ -147,16 +122,12 @@ async function sync() {
         rewards: balancesToUpdate,
         blocks: {
             "blockIncrease": blockIncrease,
-            "bigBlocks": mining.stats.blocks
+            "bigBlocks": globalBlocks
         },
         cpu: cpuUsage,
         ram: ramUsage,
         stats: {
             "connections": connections,
-            hashrate: {
-                "ducos1": ducos1Hashrate,
-                "xxhash": xxhashHashrate
-            }
         }
     }
 
@@ -186,13 +157,14 @@ async function sync() {
             socket.write("PoolPreSync");
         } else if (data === "OK") {
             socket.write(JSON.stringify(syncData));
-            //console.log(syncData)
+            console.log(syncData)
             //console.log(JSON.stringify(syncData, null, 4))
         } else if (data.startsWith("SyncOK")) {
             socket.end();
             Object.keys(mining.stats.balancesToUpdate).forEach(k =>{
                 mining.stats.balancesToUpdate[k] = 0;
             });
+            globalBlocks = [];
         } else {
             console.log(`Unknown error, server returned ${data} in sync`);
         }
