@@ -111,7 +111,10 @@ async function sync() {
     const blockIncrease = mining.stats.globalShares.increase;
     mining.stats.globalShares.increase = 0;
 
-    const balancesToUpdate = mining.stats.balancesToUpdate;
+    const balancesToUpdate = Object.assign({}, mining.stats.balancesToUpdate); // clone the object
+    Object.keys(mining.stats.balancesToUpdate).forEach(k =>{
+        delete mining.stats.balancesToUpdate[k];
+    });
 
     fs.writeFileSync(__dirname + "/../dashboard/workers.json", JSON.stringify(mining.stats.minersStats, null, 4));
 
@@ -158,9 +161,6 @@ async function sync() {
             //console.log(JSON.stringify(syncData, null, 4))
         } else if (data.startsWith("SyncOK")) {
             socket.end();
-            Object.keys(mining.stats.balancesToUpdate).forEach(k =>{
-                mining.stats.balancesToUpdate[k] = 0;
-            });
             globalBlocks = [];
         } else {
             console.log(`Unknown error, server returned ${data} in sync`);
