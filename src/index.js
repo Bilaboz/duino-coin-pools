@@ -42,5 +42,3 @@ setInterval(() => {
         }
     });
 }, 10000);
-
-//module.exports = { connections };

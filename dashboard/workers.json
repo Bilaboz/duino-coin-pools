@@ -1,25 +1,25 @@
 {
-    "23hwbpjre": {
+    "wetm3bo0x": {
         "User": "revox",
-        "Hashrate": 1094084.338084918,
+        "Hashrate": 1090262.8774422735,
         "Is estimated": false,
-        "Sharetime": 32.761,
-        "Accepted": 6,
+        "Sharetime": 0.563,
+        "Accepted": 12,
         "Rejected": 1,
         "Algorithm": "DUCO-S1",
-        "Diff": 532760,
+        "Diff": 269688,
         "Software": "Official PC Miner (DUCOS1) v2.45",
         "Identifier": "Coco"
     },
-    "nv2uo98mu": {
+    "egj12qfn7": {
         "User": "revox",
-        "Hashrate": 1086621.919179282,
+        "Hashrate": 1125030.5709023941,
         "Is estimated": false,
-        "Sharetime": 7.993,
+        "Sharetime": 5.43,
         "Accepted": 6,
         "Rejected": 1,
         "Algorithm": "DUCO-S1",
-        "Diff": 217369,
+        "Diff": 91533,
         "Software": "Official PC Miner (DUCOS1) v2.45",
         "Identifier": "Coco"
     }

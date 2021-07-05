@@ -1,24 +1,22 @@
 const net = require("net");
 const axios = require("axios"); 
 
-const poolPassword = ""
-const serverPort = 2811;
-const serverIP = "localhost"
+const { poolPassword, serverIP, serverPort, port } = require("../config/config.json");
 
 async function createPool() {
     const res = await axios.get("https://api.ipify.org/");
     if (!res.data) {
         console.log("Error: can't get the pool IP");
-        exit(1);
+        process.exit(1);
     }
     const ip = res.data;
 
     const loginInfos = {
         name: "",
         host: ip,
-        port: "",
+        port: port, // port defined in config.json
         identifier: "", // put something like your hwid, this is like a password
-        hidden: "ok"
+        hidden: "False"
     };
 
     const socket = new net.Socket();
@@ -27,12 +25,12 @@ async function createPool() {
 
     socket.on("error", (err) => {
         console.log(`Socket error at createPool: ${err}`);
-        exit(1);
+        process.exit(-1);
     });
 
     socket.on("timeout", () => {
         console.log("Socket timeout at createPool");
-        exit(1);
+        process.exit(-1);
     });
 
     socket.on("data", (data) => {
@@ -43,7 +41,7 @@ async function createPool() {
             console.log("Pool successfully added");
         } else {
             console.log(`Unknown error, server returned ${data} in createPool`);
-            exit(data);
+            process.exit(-1);
         }
     });
 }

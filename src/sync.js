@@ -2,7 +2,6 @@ const net = require("net");
 const axios = require("axios");
 const fs = require("fs");
 const osu = require("node-os-utils");
-const { exit } = require("process");
 
 const { poolID, poolVersion, port, serverIP, serverPort } = require("../config/config.json");
 let ip;
@@ -11,7 +10,7 @@ async function login() {
     const res = await axios.get("https://api.ipify.org/");
     if (!res.data) {
         console.log("Error: can't get the pool IP");
-        exit(1);
+        process.exit(-1);
     }
     ip = res.data;
 
@@ -28,12 +27,12 @@ async function login() {
 
     socket.on("error", (err) => {
         console.log(`Socket error at login: ${err}`);
-        exit(1);
+        process.exit(-1);
     });
 
     socket.on("timeout", () => {
         console.log("Socket timeout at login");
-        exit(1);
+        process.exit(-1);
     });
 
     socket.on("data", (data) => {
@@ -45,7 +44,7 @@ async function login() {
             sync();
         } else {
             console.log(`Unknown error, server returned ${data} in login`);
-            exit(data)
+            process.exit(-1)
         }
     })
 }
@@ -112,8 +111,6 @@ async function sync() {
     const blockIncrease = mining.stats.globalShares.increase;
     mining.stats.globalShares.increase = 0;
 
-    const bigBlocks = mining.stats.globalBlocks;
-
     const balancesToUpdate = mining.stats.balancesToUpdate;
 
     fs.writeFileSync(__dirname + "/../dashboard/workers.json", JSON.stringify(mining.stats.minersStats, null, 4));
@@ -157,7 +154,7 @@ async function sync() {
             socket.write("PoolPreSync");
         } else if (data === "OK") {
             socket.write(JSON.stringify(syncData));
-            console.log(syncData)
+            //console.log(syncData)
             //console.log(JSON.stringify(syncData, null, 4))
         } else if (data.startsWith("SyncOK")) {
             socket.end();
