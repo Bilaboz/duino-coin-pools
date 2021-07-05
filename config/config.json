@@ -1,5 +1,5 @@
 {
-    "poolName": "Bilaboz nodejs pool",
+    "poolName": "",
     "poolPassword": "",
     "poolID": "",
     "poolVersion": "0.1",
@@ -7,7 +7,7 @@
     "host": "localhost",
     "port": 6000,
 
-    "serverIP": "localhost",
+    "serverIP": "server.duinocoin.com",
     "serverPort": 2811,
 
     "preGenJobCount": 1000,
