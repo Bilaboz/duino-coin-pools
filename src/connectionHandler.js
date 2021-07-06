@@ -13,7 +13,7 @@ const handle = (conn) => {
     conn.write(poolVersion);
 
     conn.on("end", () => {
-        console.log(`${conn.remoteAddress} disconnected`);
+        console.log(`${conn.remoteAddress}#${conn.id} disconnected`);
     })
 
     conn.on("error", (err) => {
