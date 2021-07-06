@@ -267,7 +267,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
 
         let maxHashrate = poolRewards[reqDifficulty]["max_hashrate"];
         let reward;
-        if (hashrate > maxHashrate && acceptedShares > 2) {
+        if (hashrate > maxHashrate && acceptedShares > 3) {
             rejectedShares++;
 
             reward = 0;
@@ -303,8 +303,6 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
             }
         } else {
             rejectedShares++;
-
-            overrideDifficulty = kolka.V2(reqDifficulty);
 
             conn.write("BAD\n");
         }
