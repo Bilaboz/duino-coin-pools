@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const { miningHandler } = require("./mining");
-const { poolVersion } = require("../config/config.json")
+const { poolVersion, motd, serverVersion } = require("../config/config.json")
 const bans = require("../config/bans.json");
 
 const handle = (conn) => {
@@ -10,7 +10,7 @@ const handle = (conn) => {
     conn.id = Math.random().toString(36).substr(2, 9);
     console.log(`New incoming connection: ${conn.remoteAddress}#${conn.id}`);
 
-    conn.write(poolVersion);
+    conn.write(serverVersion);
 
     conn.on("end", () => {
         console.log(`${conn.remoteAddress}#${conn.id} disconnected`);
@@ -56,6 +56,8 @@ const handle = (conn) => {
             }
 
             miningHandler(conn, data, mainListener, true);
+        } else if (data[0] === "MOTD") {
+            conn.write(motd);
         }
     })
 }
