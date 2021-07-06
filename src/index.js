@@ -10,7 +10,7 @@ connections = 0;
 
 sync.login();
 sync.updatePoolReward();
-mining.generateJobs();
+//mining.generateJobs();
 require("./dashboard");
 
 const server = net.createServer(handle);

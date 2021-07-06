@@ -179,7 +179,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
         if (diff <= getDiff("DUE")) {
             conn.write("NO,AVR mining is disabled for pools.");
             return conn.destroy();
-        } else if (diff <= getDiff("ESP32") && diff > getDiff("DUE")) {
+        } /*else if (diff <= getDiff("ESP32") && diff > getDiff("DUE")) {
             jobInfo = getPregeneratedJob(reqDifficulty);
             if (jobInfo === -1) { // invalid avr diff provided
                 conn.write("NO,Invalid AVR diff");
@@ -189,7 +189,8 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
     
             random = jobInfo[2];
             newHash = jobInfo[1];
-        } else {
+        }*/
+        else {
             if (!isFirstShare) {
                 diff = kolka.V3(sharetime, expectedSharetime, diff);
             }
