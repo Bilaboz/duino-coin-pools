@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const mining = require("./mining");
-const { poolVersion, motd, serverVersion } = require("../config/config.json")
+const { maxWorkers, motd, serverVersion } = require("../config/config.json")
 const bans = require("../config/bans.json");
 
 const handle = (conn) => {
@@ -20,7 +20,11 @@ const handle = (conn) => {
         try {
             mining.stats.workers[conn.remoteAddress] -= 1;
             if (mining.stats.workers[conn.remoteAddress] <= 0) delete mining.stats.workers[conn.remoteAddress];
-        } catch{}
+        } catch {}
+        try {
+            mining.stats.usrWorkers[conn.username] -= 1;
+            if (mining.stats.usrWorkers[conn.username] <= 0) delete mining.stats.usrWorkers[conn.username];
+        } catch (err){console.log(err)}
     })
 
     conn.on("error", (err) => {
@@ -64,7 +68,10 @@ const handle = (conn) => {
 
             mining.miningHandler(conn, data, mainListener, true);
         } else if (data[0] === "MOTD") {
-            conn.write(motd);
+            let finalMOTD = motd
+            finalMOTD += ` Pool worker limit: ${maxWorkers}`
+
+            conn.write(finalMOTD);
         }
     })
 }

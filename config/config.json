@@ -14,6 +14,8 @@
     "preGenJobCount": 1000,
     "jobGenerationDelay": 30000,
 
+    "maxWorkers": 24,
+
     "motd": "Welcome to the first Duino-Coin pool!",
 
     "initialBlockHash": "05b7406b3909071b2d85b2d2958ad07a0d52bd12",

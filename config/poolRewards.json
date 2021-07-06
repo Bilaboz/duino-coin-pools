@@ -6,31 +6,31 @@
         "kolka_decrease_perc": 80
     },
     "XXHASH": {
-        "difficulty": 50000,
+        "difficulty": 100000,
         "reward": 0.0003,
-        "max_hashrate": 4500000,
+        "max_hashrate": 900000,
         "kolka_decrease_perc": 80
     },
     "NET": {
-        "difficulty": 75000,
+        "difficulty": 100000,
         "reward": 0.0015811,
         "max_hashrate": 1000000,
         "kolka_decrease_perc": 80
     },
     "MEDIUM": {
-        "difficulty": 50000,
+        "difficulty": 75000,
         "reward": 0.0012811,
         "max_hashrate": 500000,
         "kolka_decrease_perc": 80
     },
     "LOW": {
-        "difficulty": 5000,
+        "difficulty": 7500,
         "reward": 0.0022811,
-        "max_hashrate": 200000,
+        "max_hashrate": 250000,
         "kolka_decrease_perc": 80
     },
     "ESP32": {
-        "difficulty": 2000,
+        "difficulty": 1500,
         "reward": 0.00375,
         "max_hashrate": 16000,
         "kolka_decrease_perc": 96
@@ -38,25 +38,31 @@
     "ESP8266": {
         "difficulty": 1000,
         "reward": 0.0045,
-        "max_hashrate": 11000,
+        "max_hashrate": 13000,
         "kolka_decrease_perc": 96
     },
     "DUE": {
-        "difficulty": 1000,
-        "reward": 0.003,
-        "max_hashrate": 7000,
-        "kolka_decrease_perc": 96
-    },
-    "ARM": {
         "difficulty": 500,
         "reward": 0.003,
         "max_hashrate": 5000,
         "kolka_decrease_perc": 96
     },
+    "ARM": {
+        "difficulty": 100,
+        "reward": 0.003,
+        "max_hashrate": 1000,
+        "kolka_decrease_perc": 96
+    },
+    "MEGA": {
+        "difficulty": 16,
+        "reward": 0.004,
+        "max_hashrate": 400,
+        "kolka_decrease_perc": 96
+    },
     "AVR": {
         "difficulty": 6,
         "reward": 0.005,
-        "max_hashrate": 210,
+        "max_hashrate": 240,
         "kolka_decrease_perc": 96
     }
 }
