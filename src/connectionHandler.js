@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-const { miningHandler } = require("./mining");
+const mining = require("./mining");
 const { poolVersion, motd, serverVersion } = require("../config/config.json")
 const bans = require("../config/bans.json");
 
@@ -14,6 +14,13 @@ const handle = (conn) => {
 
     conn.on("end", () => {
         console.log(`${conn.remoteAddress}#${conn.id} disconnected`);
+        try {
+            delete mining.stats.minersStats[conn.id];
+        } catch {}
+        try {
+            mining.stats.workers[conn.remoteAddress] -= 1;
+            if (mining.stats.workers[conn.remoteAddress] <= 0) delete mining.stats.workers[conn.remoteAddress];
+        } catch{}
     })
 
     conn.on("error", (err) => {
@@ -42,7 +49,7 @@ const handle = (conn) => {
                 return conn.destroy();
             }
 
-            miningHandler(conn, data, mainListener, false);
+            mining.miningHandler(conn, data, mainListener, false);
         } else if (data[0] === "JOBXX") {
             if (!data[1]) {  // check if username was provided
                 conn.write("NO,Not enough data");
@@ -55,7 +62,7 @@ const handle = (conn) => {
                 return conn.destroy();
             }
 
-            miningHandler(conn, data, mainListener, true);
+            mining.miningHandler(conn, data, mainListener, true);
         } else if (data[0] === "MOTD") {
             conn.write(motd);
         }

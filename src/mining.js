@@ -262,8 +262,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
             acceptedShares++;
 
             if (acceptedShares > 2) {
-                let baseReward = poolRewards[reqDifficulty]["reward"];
-                reward = kolka.V1(baseReward, sharetime, diff, workers[conn.remoteAddress]);
+                reward = kolka.V1(hashrate, diff, workers[conn.remoteAddress]);
             } else {
                 reward = 0;
             }

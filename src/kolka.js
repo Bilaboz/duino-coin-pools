@@ -4,27 +4,30 @@
    2019-2021 Duino-Coin community
 */
 
-const multiplier = 1;
-const highestPCdiff = 350000;
+const highestPCdiff = 150000;
+const highestAVRdiff = 1500;
+const pcMiningPercentage = 0.8;
+const avrMiningPercentage = 0.96;
+const maxAVRHashrate = 250;
+const maxESPHashrate = 11000;
 
-function V1(baseReward, sharetime, difficulty, workers, penalty=false) {
+function V1(hashrate, difficulty, workers) {
     let output;
 
-    const pcMiningPercentage = 0.8;
-    const avrMiningPercentage = 0.96;
-
-    if (penalty) {
-        output = (Math.pow(sharetime, 2) / 1000000) * -1
+    if (hashrate < maxAVRHashrate) {
+        output = Math.log(hashrate) / 5000;
+    } else if (hashrate < maxESPHashrate) {
+        output = Math.log(hashrate) / 15000;
     } else {
-        output = multiplier * baseReward
-                + sharetime / 10000
-                + difficulty / 100000000;
+        output = Math.log(hashrate) / 30000;
     }
 
     if (difficulty > highestPCdiff) {
-        output += output * (Math.pow(pcMiningPercentage, (workers-1))) / 177;
+        output = output + output * (Math.pow(pcMiningPercentage, workers-1)) / 28110;
+    } else if (difficulty > highestAVRdiff) {
+        output = output + output * (Math.pow(pcMiningPercentage, workers-1));
     } else {
-        output += output * (Math.pow(avrMiningPercentage, (workers-1)));
+        output = output + output * (Math.pow(avrMiningPercentage, workers-1));
     }
 
     return output;
