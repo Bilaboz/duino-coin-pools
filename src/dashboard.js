@@ -15,7 +15,7 @@ app.get("/workers", (req, res) => {
 })
 
 app.get("/statistics", async (req, res) => {
-    const { connections } = require("./index");
+    require("./index");
 
     const cpuUsage = await osu.cpu.usage();
     let ramUsage =  await osu.mem.info();
