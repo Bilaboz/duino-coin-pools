@@ -270,7 +270,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
         let reward;
         if (hashrate > maxHashrate && acceptedShares > 3) {
             rejectedShares++;
-            console.log("too fast")
+
             reward = 0;
 
             if (!usingXxhash) overrideDifficulty = kolka.V2(reqDifficulty);
