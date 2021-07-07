@@ -1,0 +1,30 @@
+ /* Some dracula colors from https://draculatheme.com/contribute */
+.has-text-success {
+    color: #50fa7b;
+}
+
+.has-text-warning {
+    color: #ffb86c;
+}
+
+.gradient-logo {
+    background: linear-gradient(to right,
+        #FFF 10%,
+        #6272a4 30%,
+        #8be9fd 70%,
+        #FFF 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+
+    background-size: 200% auto;
+    animation: text_shine 2.5s ease infinite alternate;
+}
+
+@keyframes text_shine {
+    to {
+        background-position: 200%;
+    }
+}

@@ -11,9 +11,11 @@ const handle = (conn) => {
     console.log(`New incoming connection: ${conn.remoteAddress}#${conn.id}`);
 
     conn.write(serverVersion);
+    
+    conn.setTimeout(90000);
 
-    conn.on("end", () => {
-        console.log(`${conn.remoteAddress}#${conn.id} disconnected`);
+    conn.on("close", () => {
+        console.log(`${conn.remoteAddress}#${conn.id} close disconnected`);
         try {
             delete mining.stats.minersStats[conn.id];
         } catch {}
@@ -24,13 +26,18 @@ const handle = (conn) => {
         try {
             mining.stats.usrWorkers[conn.username] -= 1;
             if (mining.stats.usrWorkers[conn.username] <= 0) delete mining.stats.usrWorkers[conn.username];
-        } catch (err){console.log(err)}
+        } catch {}
     })
 
     conn.on("error", (err) => {
         if (err.code !== "ECONNRESET") {
             console.log(`Socket error in connection handler: ${err}`);
         }
+    })
+    
+    conn.on("timeout", (err) => {
+        console.log(`${conn.remoteAddress}#${conn.id} timeout`);
+        conn.end();
     })
 
     conn.on("data", function mainListener (data) {
@@ -68,8 +75,8 @@ const handle = (conn) => {
 
             mining.miningHandler(conn, data, mainListener, true);
         } else if (data[0] === "MOTD") {
-            let finalMOTD = motd
-            finalMOTD += ` Pool worker limit: ${maxWorkers}`
+            let finalMOTD = motd;
+            finalMOTD += `\nPool worker limit: ${maxWorkers}`
 
             conn.write(finalMOTD);
         }

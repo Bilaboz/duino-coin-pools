@@ -4,7 +4,7 @@
     "poolID": "",
     "poolVersion": "0.1",
 
-    "host": "localhost",
+    "host": "",
     "port": 6000,
 
     "serverIP": "server.duinocoin.com",
@@ -14,13 +14,13 @@
     "preGenJobCount": 1000,
     "jobGenerationDelay": 30000,
 
-    "maxWorkers": 24,
+    "maxWorkers": 50,
 
     "motd": "Welcome to the first Duino-Coin pool!",
 
     "initialBlockHash": "05b7406b3909071b2d85b2d2958ad07a0d52bd12",
     "expectedSharetime": 12,
-    "updateMinersStatsEvery": 1,
+    "updateMinersStatsEvery": 2,
     "blockProbability": 1000000,
-    "blockReward": 7.7
+    "blockReward": 28.11
 }
