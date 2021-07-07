@@ -36,7 +36,7 @@ const handle = (conn) => {
     })
     
     conn.on("timeout", (err) => {
-        console.log(`${conn.remoteAddress}#${conn.id} timeout`);
+        //console.log(`${conn.remoteAddress}#${conn.id} timeout`);
         conn.destroy();
     })
 
