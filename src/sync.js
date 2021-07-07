@@ -111,21 +111,17 @@ async function sync() {
     const blockIncrease = mining.stats.globalShares.increase;
     mining.stats.globalShares.increase = 0;
 
-    const balancesToUpdate = Object.assign({}, mining.stats.balancesToUpdate); // clone the object
-
-    fs.writeFileSync(__dirname + "/../dashboard/workers.json", JSON.stringify(mining.stats.minersStats, null, 4));
+    fs.writeFile(__dirname + "/../dashboard/workers.json", JSON.stringify(mining.stats.minersStats, null, 4), () => {});
 
     const syncData = {
-        rewards: balancesToUpdate,
         blocks: {
             "blockIncrease": blockIncrease,
             "bigBlocks": globalBlocks
         },
         cpu: cpuUsage,
         ram: ramUsage,
-        stats: {
-            "connections": connections,
-        }
+
+        connections: connections
     }
 
     const loginInfos = {
@@ -151,17 +147,17 @@ async function sync() {
         if (data.startsWith("2")) {
             socket.write(`PoolLogin,${JSON.stringify(loginInfos)}`);  
         } else if (data === "LoginOK") {
-            socket.write("PoolPreSync");
-        } else if (data === "OK") {
-            socket.write(JSON.stringify(syncData));
+            fs.writeFileSync(__dirname + "/../dashboard/rewards.json", JSON.stringify(mining.stats.balancesToUpdate));
+            socket.write(`PoolSync,${JSON.stringify(syncData)}`);
             //console.log(syncData)
-            //console.log(JSON.stringify(syncData, null, 4))
-        } else if (data.startsWith("SyncOK")) {
+        } else if (data === "SyncOK") {
             socket.end();
             Object.keys(mining.stats.balancesToUpdate).forEach(k =>{
                 delete mining.stats.balancesToUpdate[k];
             });
             globalBlocks = [];
+
+            console.log(`${new Date().toLocaleString()} - Successfull sync`);
         } else {
             console.log(`Unknown error, server returned ${data} in sync`);
         }

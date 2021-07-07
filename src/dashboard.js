@@ -14,6 +14,10 @@ app.get("/workers", (req, res) => {
     res.sendFile(path.resolve(__dirname + "/../dashboard/workers.json"));
 })
 
+app.get("/rewards", (req, res) => {
+    res.sendFile(path.resolve(__dirname + "/../dashboard/rewards.json"));
+})
+
 app.get("/statistics", async (req, res) => {
     require("./index");
 

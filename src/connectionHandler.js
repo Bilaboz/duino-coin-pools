@@ -8,14 +8,14 @@ const handle = (conn) => {
     conn.setEncoding("utf8");
     // generate a unique id for the connection
     conn.id = Math.random().toString(36).substr(2, 9);
-    console.log(`New incoming connection: ${conn.remoteAddress}#${conn.id}`);
+    //console.log(`New incoming connection: ${conn.remoteAddress}#${conn.id}`);
 
     conn.write(serverVersion);
     
     conn.setTimeout(90000);
 
     conn.on("close", () => {
-        console.log(`${conn.remoteAddress}#${conn.id} close disconnected`);
+        //console.log(`${conn.remoteAddress}#${conn.id} close disconnected`);
         try {
             delete mining.stats.minersStats[conn.id];
         } catch {}

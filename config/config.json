@@ -4,11 +4,11 @@
     "poolID": "",
     "poolVersion": "0.1",
 
-    "host": "",
+    "host": "0.0.0.0",
     "port": 6000,
 
     "serverIP": "server.duinocoin.com",
-    "serverPort": 2811,
+    "serverPort": 2810,
     "serverVersion": "2.5",
 
     "preGenJobCount": 1000,

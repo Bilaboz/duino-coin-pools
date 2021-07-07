@@ -59,7 +59,7 @@ function V3 (sharetime, expectedSharetime, difficulty) {
         }
     }
 
-    if (newDifficulty <= 5000) newDifficulty = 5000;
+    if (newDifficulty <= 2500) newDifficulty = 2500;
 
     return parseInt(newDifficulty);
 }

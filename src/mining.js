@@ -191,7 +191,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
             newHash = jobInfo[1];
         }*/
         else {
-            if (!isFirstShare) {
+            if (!isFirstShare && (diff > getDiff("ESP32"))) {
                 diff = kolka.V3(sharetime, expectedSharetime, diff);
             }
 
@@ -270,7 +270,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
         let reward;
         if (hashrate > maxHashrate && acceptedShares > 3) {
             rejectedShares++;
-
+            console.log("too fast")
             reward = 0;
 
             if (!usingXxhash) overrideDifficulty = kolka.V2(reqDifficulty);
