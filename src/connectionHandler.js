@@ -37,7 +37,7 @@ const handle = (conn) => {
     
     conn.on("timeout", (err) => {
         console.log(`${conn.remoteAddress}#${conn.id} timeout`);
-        conn.end();
+        conn.destroy();
     })
 
     conn.on("data", function mainListener (data) {
