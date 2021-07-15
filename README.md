@@ -3,7 +3,6 @@
     <img alt="NodeJS" src="https://img.shields.io/badge/node.js%20-%2343853D.svg?logo=node.js&logoColor=white"/>
     <img src="https://img.shields.io/badge/node-%3E%3D4.0.0-blue.svg" />
     <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
-
     <a href="https://github.com/Bilaboz/duino-stats/blob/main/LICENSE" target="_blank">
         <img alt="License: MIT" src="https://img.shields.io/github/license/Bilaboz/duino-stats" />
     </a>
