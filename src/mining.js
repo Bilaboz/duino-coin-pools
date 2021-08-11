@@ -33,7 +33,7 @@ let globalShares = { increase: 0, total: 0 };
 /* Generate DUCO-S1A jobs for low-power devices */
 async function generateJobs() {
     /* AVR */
-    /*for (let i = 0; i < preGenJobCount; i++) {
+    for (let i = 0; i < preGenJobCount; i++) {
         const random = Math.floor((Math.random() * getDiff("AVR") * 100) + 1);
         let shasum = crypto.createHash("sha1");
         const newHash = shasum.update(lastBlockhash + random).digest("hex");
@@ -42,10 +42,10 @@ async function generateJobs() {
             expectedHash: newHash.toString(),
             lastBlockhash: lastBlockhash
         }
-    }*/
+    }
 
     /* Arduino DUE */
-    /*for (let i = 0; i < preGenJobCount; i++) {
+    for (let i = 0; i < preGenJobCount; i++) {
         const random = Math.floor((Math.random() * getDiff("DUE") * 100) + 1);
         let shasum = crypto.createHash("sha1");
         const newHash = shasum.update(lastBlockhash + random).digest("hex");
@@ -54,7 +54,7 @@ async function generateJobs() {
             expectedHash: newHash.toString(),
             lastBlockhash: lastBlockhash
         }
-    }*/
+    }
 
     /* ESP32 */
     for (let i = 0; i < preGenJobCount; i++) {
@@ -168,15 +168,23 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
             }
         }
 
-        if (checkWorkers(workers[conn.remoteAddress], usrWorkers[username])) {
-            conn.write(`NO,Too many workers current limit: ${maxWorkers}`);
-            return conn.destroy();
+        if (conn.remoteAddress != "51.15.127.80") {
+            if (checkWorkers(workers[conn.remoteAddress], usrWorkers[username])) {
+                conn.write(`NO,Too many workers current limit: ${maxWorkers}`);
+                return conn.destroy();
+            }
+        }
+        else {
+            if (checkWorkers(0, usrWorkers[username])) {
+                conn.write(`NO,Too many workers current limit: ${maxWorkers}`);
+                return conn.destroy();
+            }
         }
     
         if (!poolRewards.hasOwnProperty(reqDifficulty)) reqDifficulty = "NET";
         let diff = getDiff(reqDifficulty);
 
-        if (diff <= getDiff("DUE")) {
+        if (diff < getDiff("AVR")) {
             conn.write("NO,AVR mining is disabled for pools.");
             return conn.destroy();
         } /*else if (diff <= getDiff("ESP32") && diff > getDiff("DUE")) {
@@ -225,7 +233,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
 
         const hashrate = random / sharetime;
 
-        if (Math.abs(reportedHashrate - hashrate)) {
+        if (Math.abs(reportedHashrate - hashrate) > 20000) {
             reportedHashrate = hashrate;
         }
 
@@ -280,7 +288,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
             acceptedShares++;
 
             if (acceptedShares > 2) {
-                reward = kolka.V1(hashrate, diff, workers[conn.remoteAddress]);
+                reward = kolka.V1(hashrate, diff, Math.max(workers[conn.remoteAddress], usrWorkers[username]));
             } else {
                 reward = 0;
             }

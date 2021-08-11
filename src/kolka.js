@@ -6,28 +6,37 @@
 
 const highestPCdiff = 150000;
 const highestAVRdiff = 1500;
+
 const pcMiningPercentage = 0.8;
 const avrMiningPercentage = 0.96;
-const maxAVRHashrate = 250;
+
+const maxAVRHashrate = 210;
+const maxMEGAVRHashrate = 700
 const maxESPHashrate = 11000;
 
 function V1(hashrate, difficulty, workers) {
     let output;
 
     if (hashrate < maxAVRHashrate) {
-        output = Math.log(hashrate) / 5000;
+        output = Math.log(hashrate) / 6006;
+    } else if (hashrate < maxMEGAVRHashrate) {
+        output = Math.log(hashrate) / 6226;
     } else if (hashrate < maxESPHashrate) {
-        output = Math.log(hashrate) / 15000;
+        output = Math.log(hashrate) / 8558;
     } else {
-        output = Math.log(hashrate) / 30000;
+        output = Math.log(hashrate) / 20002;
     }
 
     if (difficulty > highestPCdiff) {
-        output = output + output * (Math.pow(pcMiningPercentage, workers-1)) / 28110;
+        output = output + output * (Math.pow(pcMiningPercentage, workers-1)) / (28110 * workers);
     } else if (difficulty > highestAVRdiff) {
         output = output + output * (Math.pow(pcMiningPercentage, workers-1));
     } else {
         output = output + output * (Math.pow(avrMiningPercentage, workers-1));
+    }
+
+    if (workers > 24) {
+        output = 0;
     }
 
     return output;

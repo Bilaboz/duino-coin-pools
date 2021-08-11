@@ -5,6 +5,8 @@ const osu = require("node-os-utils");
 
 const { poolID, poolVersion, port, serverIP, serverPort } = require("../config/config.json");
 let ip;
+const SYNC_TIME = 15 * 1000;
+const TIMEOUT = 30 * 1000;
 
 async function login() {
     const res = await axios.get("https://api.ipify.org/");
@@ -23,6 +25,7 @@ async function login() {
 
     const socket = new net.Socket();
     socket.setEncoding("utf-8");
+    socket.setTimeout(TIMEOUT);
     socket.connect(serverPort, serverIP);
 
     socket.on("error", (err) => {
@@ -133,6 +136,7 @@ async function sync() {
 
     const socket = new net.Socket();
     socket.setEncoding("utf-8");
+    socket.setTimeout(TIMEOUT);
     socket.connect(serverPort, serverIP);
 
     socket.on("error", (err) => {
@@ -163,7 +167,7 @@ async function sync() {
         }
     });
 
-    setTimeout(sync, 20000)
+    setTimeout(sync, SYNC_TIME)
 }
 
 module.exports = { login, logout, updatePoolReward };
