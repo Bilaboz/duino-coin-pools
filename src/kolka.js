@@ -28,15 +28,11 @@ function V1(hashrate, difficulty, workers) {
     }
 
     if (difficulty > highestPCdiff) {
-        output = output + output * (Math.pow(pcMiningPercentage, workers-1)) / (28110 * workers);
+        output = 2*(output * (Math.pow(pcMiningPercentage, workers-1)) / (28110 * workers));
     } else if (difficulty > highestAVRdiff) {
-        output = output + output * (Math.pow(pcMiningPercentage, workers-1));
+        output = 2*(output * (Math.pow(pcMiningPercentage, workers-1)));
     } else {
-        output = output + output * (Math.pow(avrMiningPercentage, workers-1));
-    }
-
-    if (workers > 24) {
-        output = 0;
+        output = 2*(output * (Math.pow(avrMiningPercentage, workers-1)));
     }
 
     return output;
@@ -44,13 +40,15 @@ function V1(hashrate, difficulty, workers) {
 
 function V2(currDiff) {
     switch(currDiff) {
-        case "AVR": return "ARM";
-        case "ARM": return "ESP8266"
+        case "AVR": return "MEGA";
+        case "MEGA": return "ARM";
+        case "ARM": return "DUE";
+        case "DUE": return "ESP8266";
         case "ESP8266": return "ESP32"
         case "ESP32": return "LOW";
         case "LOW": return "MEDIUM";
         case "MEDIUM": return "NET";
-        case "NET": return "EXTREME";
+        return "EXTREME";
     }
 }
 
