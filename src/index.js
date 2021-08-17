@@ -15,7 +15,7 @@ require("./dashboard");
 
 const server = net.createServer(handle);
 
-server.listen(port, host, () => {
+server.listen(port, host, 1, () => {
     console.log(`Server listening on port ${port}\n`);
 })
 
