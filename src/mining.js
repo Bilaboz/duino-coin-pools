@@ -264,7 +264,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
 
         let maxHashrate = poolRewards[reqDifficulty]["max_hashrate"];
         let reward;
-        if (hashrate > maxHashrate && acceptedShares > 3) {
+        if (hashrate >= maxHashrate) {
             rejectedShares++;
 
             reward = 0;
@@ -275,8 +275,18 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
         } else if (parseInt(answer[0]) === random) {
             acceptedShares++;
 
-            if (acceptedShares > 2) {
-                reward = kolka.V1(hashrate, diff, this_miner_id);
+            if (acceptedShares > updateMinersStatsEvery) {
+                if (diff <= getDiff("ESP32")) {
+                    if (answer[4] == undefined) {
+                        reward = 0;
+                    }
+                    else {
+                        reward = kolka.V1(hashrate, diff, this_miner_id);
+                    }
+                }
+                else {
+                    reward = kolka.V1(hashrate, diff, this_miner_id);
+                }
             } else {
                 reward = 0;
             }
