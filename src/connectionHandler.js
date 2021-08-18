@@ -31,7 +31,7 @@ const handle = (conn) => {
 
     conn.on("error", (err) => {
         if (err.code !== "ECONNRESET") {
-            console.log(`Socket error in connection handler: ${err}`);
+            //console.log(`Socket error in connection handler: ${err}`);
         }
     })
     
