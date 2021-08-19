@@ -1,6 +1,7 @@
 const express = require("express");
 const osu = require("node-os-utils");
 const path = require("path");
+const { dashboard_port } = require("../config/config.json")
 
 const app = express();
 
@@ -32,5 +33,5 @@ app.get("/statistics", async (req, res) => {
     });
 })
 
-app.listen(5998);
-console.log("Dashboard started at http://127.0.0.1:5998/");
+app.listen(dashboard_port);
+console.log("Dashboard started at http://127.0.0.1:/"+dashboard_port);
