@@ -4,6 +4,8 @@
    2019-2021 Duino-Coin community
 */
 
+const poolRewards = require("../config/poolRewards.json");
+
 const highestPCdiff = 150000;
 const highestAVRdiff = 1500;
 
@@ -18,17 +20,17 @@ function V1(hashrate, difficulty, workers) {
     let output;
 
     if (hashrate < maxAVRHashrate) {
-        output = Math.log(hashrate) / 6006;
+        output = Math.log(hashrate) / poolRewards["AVR"]["reward"];
     } else if (hashrate < maxMEGAVRHashrate) {
-        output = Math.log(hashrate) / 6226;
+        output = Math.log(hashrate) / poolRewards["MEGA"]["reward"];
     } else if (hashrate < maxESPHashrate) {
-        output = Math.log(hashrate) / 8558;
+        output = Math.log(hashrate) / poolRewards["ESP8266"]["reward"];
     } else {
-        output = Math.log(hashrate) / 20002;
+        output = Math.log(hashrate) / poolRewards["NET"]["reward"];
     }
 
     if (difficulty > highestPCdiff) {
-        output = 2*(output * (Math.pow(pcMiningPercentage, workers-1)) / (28110 * workers));
+        output = 2*(output * (Math.pow(pcMiningPercentage, workers-1)) / (poolRewards["EXTREME"]["reward"] * workers));
     } else if (difficulty > highestAVRdiff) {
         output = 2*(output * (Math.pow(pcMiningPercentage, workers-1)));
     } else {

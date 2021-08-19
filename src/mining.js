@@ -253,7 +253,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
                 "Diff":         diff,
                 "Software":     minerName,
                 "Identifier":   rigIdentifier,
-                "Timestamp":    Math.floor(new Date().getTime() / 1000),
+                "Timestamp":    Math.floor(new Date() / 1000),
             }
             minersStats[conn.id] = minerStats;
 

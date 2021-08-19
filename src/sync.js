@@ -5,8 +5,8 @@ const osu = require("node-os-utils");
 
 const { poolID, poolVersion, port, serverIP, serverPort } = require("../config/config.json");
 let ip;
-const SYNC_TIME = 15 * 1000;
-const TIMEOUT = 30 * 1000;
+const SYNC_TIME = 10 * 1000;
+const TIMEOUT = 20 * 1000;
 
 async function login() {
     const res = await axios.get("https://api.ipify.org/");
@@ -96,7 +96,7 @@ function updatePoolReward() {
         });
     
         response.data.on("end", () => {
-            //console.log("Updated poolRewards.json")
+            console.log("Updated poolRewards.json")
         });
     });
 
@@ -114,8 +114,6 @@ async function sync() {
     const blockIncrease = mining.stats.globalShares.increase;
     mining.stats.globalShares.increase = 0;
 
-    fs.writeFile(__dirname + "/../dashboard/workers.json", JSON.stringify(mining.stats.minersStats, null, 4), () => {});
-
     const syncData = {
         blocks: {
             "blockIncrease": blockIncrease,
@@ -126,6 +124,11 @@ async function sync() {
 
         connections: connections
     }
+
+    fs.writeFile(__dirname + "/../dashboard/workers.json", JSON.stringify(mining.stats.minersStats, null, 4), () => {});
+    fs.writeFile(__dirname + "/../dashboard/rewards.json", JSON.stringify(mining.stats.balancesToUpdate, null, 4), () => {});
+    fs.writeFile(__dirname + "/../dashboard/statistics.json", JSON.stringify(syncData, null, 4), () => {});
+
 
     const loginInfos = {
         host: ip,
@@ -151,7 +154,6 @@ async function sync() {
         if (data.startsWith("2")) {
             socket.write(`PoolLogin,${JSON.stringify(loginInfos)}`);  
         } else if (data === "LoginOK") {
-            fs.writeFileSync(__dirname + "/../dashboard/rewards.json", JSON.stringify(mining.stats.balancesToUpdate));
             socket.write(`PoolSync,${JSON.stringify(syncData)}`);
             //console.log(syncData)
         } else if (data === "SyncOK") {

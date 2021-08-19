@@ -32,5 +32,5 @@ app.get("/statistics", async (req, res) => {
     });
 })
 
-app.listen(6001);
-console.log("Dashboard started at http://127.0.0.1:6001/");
+app.listen(5998);
+console.log("Dashboard started at http://127.0.0.1:5998/");
