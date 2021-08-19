@@ -10,9 +10,11 @@ const handle = (conn) => {
     conn.id = Math.random().toString(36).substr(2, 9);
     //console.log(`New incoming connection: ${conn.remoteAddress}#${conn.id}`);
 
-    conn.write(serverVersion);
-    
-    conn.setTimeout(90000);
+    try {
+        conn.write(serverVersion);
+        conn.setTimeout(90000);
+    }
+    catch(err) {}
 
     conn.on("close", () => {
         //console.log(`${conn.remoteAddress}#${conn.id} close disconnected`);
