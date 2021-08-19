@@ -6,6 +6,7 @@
 
     "host": "0.0.0.0",
     "port": 6000,
+    "dashboard_port": 6001
 
     "serverIP": "server.duinocoin.com",
     "serverPort": 2810,
