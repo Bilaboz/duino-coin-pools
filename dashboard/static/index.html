@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://jenil.github.io/bulmaswatch/superhero/bulmaswatch.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/js/all.min.js" integrity="sha256-MAgcygDRahs+F/Nk5Vz387whB4kSK9NXlDN3w58LLq0=" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="/script.js" defer></script>
     <title>Pulse Pool Stats</title>
     <link rel="icon" href="logo.png" type="image/png" />
@@ -81,6 +82,20 @@
                 </div>
                 <div class="box">
                     <p class="title">
+                        <i class="fa fa-fw fa-info-circle"></i>
+                        View your mining stats
+                    </p>
+                    <div class="columns has-text-centered">
+                        <div class="column">
+                            <p class="subtitle">
+                                <input type="text" class="input" id="search" placeholder="Your Duinocoin username..." style="margin-right: 10%; width: 87.5%;">
+                                <button type="submit" class="button btn btn-default" id="submit" onclick="search()" style="width: 10%; right: 2.5%; position: absolute;" >Search</button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="box">
+                    <p class="title">
                         <i class="fa fa-fw fa-book"></i>
                         History
                     </p>
@@ -107,6 +122,13 @@
             </p>
         </div>
     </footer>
+    <script>
+        $('#submit').on('click', function () {
+            var searchInput = $('#search').val();
+            var url = "https://explorer.duinocoin.com/?search=" + searchInput;
+            window.open(url);
+        });
+    </script>
 </body>
 
 </html>
