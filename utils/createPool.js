@@ -1,7 +1,7 @@
 const net = require("net");
 const axios = require("axios"); 
 
-const { poolPassword, serverIP, serverPort, port } = require("../config/config.json");
+const { poolID, poolName, poolPassword, serverIP, serverPort, port } = require("../config/config.json");
 
 async function createPool() {
     const res = await axios.get("https://api.ipify.org/");
@@ -12,10 +12,10 @@ async function createPool() {
     const ip = res.data;
 
     const loginInfos = {
-        name: "",
+        name: poolID,
         host: ip,
-        port: port, // port defined in config.json
-        identifier: "", // put something like your hwid, this is like a password
+        port: port,
+        identifier: poolName,
         hidden: "False"
     };
 
