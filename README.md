@@ -11,7 +11,13 @@ Duino Pools are mining nodes for Duino-Coin written in node.js.
   * [Duino-Coin Github page](https://github.com/revoxhere/duino-coin)
   * [Duino-Coin Website](https://duinocoin.com) 
   * [Duino-Coin Discord](https://discord.gg/k48Ht5y) 
-  
+
+### List of official pools
+  * [BeyondPool](https://beyondpool.io)
+  * [PulsePool](http://149.91.88.18:6001/)
+  * [StarPool](http://51.158.182.90:6001/)
+  * [WinnerPool](http://193.164.7.180:6001/)
+
 More docs coming soon.
 
 ## Show your support
