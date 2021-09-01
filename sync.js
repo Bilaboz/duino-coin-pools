@@ -163,7 +163,7 @@ async function sync() {
             });
             globalBlocks = [];
 
-            console.log(poolID +` - ${new Date().toLocaleString()} - Successfull sync`);
+            console.log(`${new Date().toLocaleString()} - Successfull sync`);
         } else {
             console.log(`Unknown error, server returned ${data} in sync`);
         }

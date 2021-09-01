@@ -33,7 +33,7 @@ let globalShares = { increase: 0, total: 0 };
 /* Generate DUCO-S1A jobs for low-power devices */
 async function generateJobs() {
     /* AVR */
-    /*for (let i = 0; i < preGenJobCount; i++) {
+    for (let i = 0; i < preGenJobCount; i++) {
         const random = Math.floor((Math.random() * getDiff("AVR") * 100) + 1);
         let shasum = crypto.createHash("sha1");
         const newHash = shasum.update(lastBlockhash + random).digest("hex");
@@ -42,10 +42,10 @@ async function generateJobs() {
             expectedHash: newHash.toString(),
             lastBlockhash: lastBlockhash
         }
-    }*/
+    }
 
     /* Arduino DUE */
-    /*for (let i = 0; i < preGenJobCount; i++) {
+    for (let i = 0; i < preGenJobCount; i++) {
         const random = Math.floor((Math.random() * getDiff("DUE") * 100) + 1);
         let shasum = crypto.createHash("sha1");
         const newHash = shasum.update(lastBlockhash + random).digest("hex");
@@ -54,7 +54,7 @@ async function generateJobs() {
             expectedHash: newHash.toString(),
             lastBlockhash: lastBlockhash
         }
-    }*/
+    }
 
     /* ESP32 */
     for (let i = 0; i < preGenJobCount; i++) {
@@ -132,6 +132,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
     let isFirstShare = true;
     let overrideDifficulty = "";
     let acceptedShares = 0, rejectedShares = 0;
+    let this_miner_id = 1;
     const username = data[1];
     conn.username = username;
 
@@ -157,6 +158,8 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
             } else {
                 usrWorkers[username] = 1;
             }
+
+            let this_miner_id = Math.max(usrWorkers[username], workers[conn.remoteAddress])
         } else {
             data = await receiveData(conn);
             data = data.split(",");
@@ -168,42 +171,34 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
             }
         }
 
-        if (checkWorkers(workers[conn.remoteAddress], usrWorkers[username])) {
-            conn.write(`NO,Too many workers current limit: ${maxWorkers}`);
-            return conn.destroy();
+        if (conn.remoteAddress != "51.15.127.80") {
+            if (checkWorkers(workers[conn.remoteAddress], usrWorkers[username])) {
+                conn.write(`NO,Too many workers current limit: ${maxWorkers}`);
+                return conn.destroy();
+            }
+        }
+        else {
+            if (checkWorkers(0, usrWorkers[username])) {
+                conn.write(`NO,Too many workers current limit: ${maxWorkers}`);
+                return conn.destroy();
+            }
         }
     
         if (!poolRewards.hasOwnProperty(reqDifficulty)) reqDifficulty = "NET";
         let diff = getDiff(reqDifficulty);
 
-        if (diff <= getDiff("DUE")) {
-            conn.write("NO,AVR mining is disabled for pools.");
-            return conn.destroy();
-        } /*else if (diff <= getDiff("ESP32") && diff > getDiff("DUE")) {
-            jobInfo = getPregeneratedJob(reqDifficulty);
-            if (jobInfo === -1) { // invalid avr diff provided
-                conn.write("NO,Invalid AVR diff");
-                console.log(`${conn.remoteAddress}: Invalid avr diff provided`);
-                return conn.destroy();
-            }
-    
-            random = jobInfo[2];
-            newHash = jobInfo[1];
-        }*/
-        else {
-            if (!isFirstShare && (diff > getDiff("ESP32"))) {
-                diff = kolka.V3(sharetime, expectedSharetime, diff);
-            }
+        if (!isFirstShare && (diff > getDiff("ESP32"))) {
+            diff = kolka.V3(sharetime, expectedSharetime, diff);
+        }
 
-            random = Math.floor((Math.random() * diff * 100) + 1);
+        random = Math.floor((Math.random() * diff * 100) + 1);
     
-            if (usingXxhash) {
-                newHash = XXH.h64(lastBlockhash + random, 2811).toString(16);
-            } else {
-                const shasum = crypto.createHash("sha1");
-                shasum.update(lastBlockhash + random);
-                newHash = shasum.digest("hex");
-            }
+        if (usingXxhash) {
+            newHash = XXH.h64(lastBlockhash + random, 2811).toString(16);
+        } else {
+            const shasum = crypto.createHash("sha1");
+            shasum.update(lastBlockhash + random);
+            newHash = shasum.digest("hex");
         }
 
         job = [lastBlockhash, newHash.toString(), diff];
@@ -225,7 +220,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
 
         const hashrate = random / sharetime;
 
-        if (Math.abs(reportedHashrate - hashrate)) {
+        if (Math.abs(reportedHashrate - hashrate) > 20000) {
             reportedHashrate = hashrate;
         }
 
@@ -257,7 +252,8 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
                 "Algorithm":    usingXxhash ? "XXHASH" : "DUCO-S1",
                 "Diff":         diff,
                 "Software":     minerName,
-                "Identifier":   rigIdentifier
+                "Identifier":   rigIdentifier,
+                "Timestamp":    Math.floor(new Date() / 1000),
             }
             minersStats[conn.id] = minerStats;
 
@@ -268,7 +264,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
 
         let maxHashrate = poolRewards[reqDifficulty]["max_hashrate"];
         let reward;
-        if (hashrate > maxHashrate && acceptedShares > 3) {
+        if (hashrate >= maxHashrate) {
             rejectedShares++;
 
             reward = 0;
@@ -279,8 +275,18 @@ async function miningHandler(conn, data, mainListener, usingXxhash) {
         } else if (parseInt(answer[0]) === random) {
             acceptedShares++;
 
-            if (acceptedShares > 2) {
-                reward = kolka.V1(hashrate, diff, workers[conn.remoteAddress]);
+            if (acceptedShares > updateMinersStatsEvery) {
+                if (diff <= getDiff("ESP32")) {
+                    if (answer[4] == undefined) {
+                        reward = 0;
+                    }
+                    else {
+                        reward = kolka.V1(hashrate, diff, this_miner_id);
+                    }
+                }
+                else {
+                    reward = kolka.V1(hashrate, diff, this_miner_id);
+                }
             } else {
                 reward = 0;
             }

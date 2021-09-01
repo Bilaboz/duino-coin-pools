@@ -4,30 +4,37 @@
    2019-2021 Duino-Coin community
 */
 
+const poolRewards = require("../config/poolRewards.json");
+
 const highestPCdiff = 150000;
 const highestAVRdiff = 1500;
+
 const pcMiningPercentage = 0.8;
 const avrMiningPercentage = 0.96;
-const maxAVRHashrate = 250;
+
+const maxAVRHashrate = 210;
+const maxMEGAVRHashrate = 700
 const maxESPHashrate = 11000;
 
 function V1(hashrate, difficulty, workers) {
     let output;
 
     if (hashrate < maxAVRHashrate) {
-        output = Math.log(hashrate) / 5000;
+        output = Math.log(hashrate) / poolRewards["AVR"]["reward"];
+    } else if (hashrate < maxMEGAVRHashrate) {
+        output = Math.log(hashrate) / poolRewards["MEGA"]["reward"];
     } else if (hashrate < maxESPHashrate) {
-        output = Math.log(hashrate) / 15000;
+        output = Math.log(hashrate) / poolRewards["ESP8266"]["reward"];
     } else {
-        output = Math.log(hashrate) / 30000;
+        output = Math.log(hashrate) / poolRewards["NET"]["reward"];
     }
 
     if (difficulty > highestPCdiff) {
-        output = output + output * (Math.pow(pcMiningPercentage, workers-1)) / 28110;
+        output = 2*(output * (Math.pow(pcMiningPercentage, workers-1)) / (poolRewards["EXTREME"]["reward"] * workers));
     } else if (difficulty > highestAVRdiff) {
-        output = output + output * (Math.pow(pcMiningPercentage, workers-1));
+        output = 2*(output * (Math.pow(pcMiningPercentage, workers-1)));
     } else {
-        output = output + output * (Math.pow(avrMiningPercentage, workers-1));
+        output = 2*(output * (Math.pow(avrMiningPercentage, workers-1)));
     }
 
     return output;
@@ -35,13 +42,15 @@ function V1(hashrate, difficulty, workers) {
 
 function V2(currDiff) {
     switch(currDiff) {
-        case "AVR": return "ARM";
-        case "ARM": return "ESP8266"
+        case "AVR": return "MEGA";
+        case "MEGA": return "ARM";
+        case "ARM": return "DUE";
+        case "DUE": return "ESP8266";
         case "ESP8266": return "ESP32"
         case "ESP32": return "LOW";
         case "LOW": return "MEDIUM";
         case "MEDIUM": return "NET";
-        case "NET": return "EXTREME";
+        return "EXTREME";
     }
 }
 
