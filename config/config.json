@@ -2,26 +2,26 @@
     "poolName": "",
     "poolPassword": "",
     "poolID": "",
-    "poolVersion": "0.1",
+    "poolVersion": "",
+    "motd": "Welcome to duino pool!",
 
     "host": "0.0.0.0",
     "port": 6000,
     "dashboard_port": 6001,
-
-    "serverIP": "server.duinocoin.com",
-    "serverPort": 2810,
-    "serverVersion": "2.5",
-
+    "maxWorkers": 50,
+    "syncTime": 10,
+    "timeout": 10,
     "preGenJobCount": 1000,
     "jobGenerationDelay": 30000,
 
-    "maxWorkers": 50,
+    "serverIP": "server.duinocoin.com",
+    "serverPort": 2809,
+    "serverVersion": "2.7",
 
-    "motd": "Welcome to the first Duino-Coin pool!",
-
+    "base_sync_folder": "../dashboard/",
     "initialBlockHash": "05b7406b3909071b2d85b2d2958ad07a0d52bd12",
-    "expectedSharetime": 12,
-    "updateMinersStatsEvery": 2,
+    "expectedSharetime": 15,
+    "updateMinersStatsEvery": 1,
     "blockProbability": 1000000,
     "blockReward": 28.11
 }
