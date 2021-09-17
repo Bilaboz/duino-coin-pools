@@ -12,12 +12,6 @@ Duino Pools are mining nodes for Duino-Coin written in node.js.
   * [Duino-Coin Website](https://duinocoin.com) 
   * [Duino-Coin Discord](https://discord.gg/k48Ht5y) 
 
-### List of official pools
-  * [BeyondPool](https://beyondpool.io)
-  * [PulsePool](http://149.91.88.18:6001/)
-  * [StarPool](http://51.158.182.90:6001/)
-  * [WinnerPool](http://193.164.7.180:6001/)
-
 More docs coming soon.
 
 ## Show your support
@@ -26,7 +20,7 @@ Give a ⭐️ if this project helped you!
 
 ## 📝 License
 
-Copyright © 2021 [Bilaboz](https://github.com/Bilaboz) from the Duino-Coin team.<br />
+Copyright © 2021 [Bilaboz](https://github.com/Bilaboz) from the Duino team.<br />
 This project is [MIT](https://github.com/Bilaboz/duino-stats/blob/main/LICENSE) licensed.
 
 ***
