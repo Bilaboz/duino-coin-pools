@@ -12,6 +12,7 @@ const {
     poolID,
     poolVersion,
     serverIP,
+    poolName,
     serverPort,
     port,
     base_sync_folder,
@@ -25,7 +26,7 @@ const TIMEOUT = timeout * 1000;
 async function login() {
     const res = await axios.get("https://api.ipify.org/");
     if (!res.data) {
-        console.log(`${poolID}: ${new Date().toLocaleString()} - Can't fetch pool IP`);
+        console.log(`${poolName}: ${new Date().toLocaleString()} - Can't fetch pool IP`);
         process.exit(-1);
     }
     ip = res.data;
@@ -34,7 +35,8 @@ async function login() {
         host: ip,
         port: port,
         version: poolVersion,
-        identifier: poolID
+        identifier: poolID,
+        name: poolName
     };
 
     const socket = new net.Socket();
@@ -43,16 +45,16 @@ async function login() {
         socket.setTimeout(TIMEOUT);
         socket.connect(serverPort, serverIP);
     } catch (err) {
-        console.log(`${poolID}: ${new Date().toLocaleString()} - Socket error at connect: ${err}`);
+        console.log(`${poolName}: ${new Date().toLocaleString()} - Socket error at connect: ${err}`);
     }
 
     socket.on("error", (err) => {
-        console.log(`${poolID}: ${new Date().toLocaleString()} - Socket error at login: ${err}`);
+        console.log(`${poolName}: ${new Date().toLocaleString()} - Socket error at login: ${err}`);
         process.exit(-1);
     });
 
     socket.on("timeout", () => {
-        console.log(`${poolID}: ${new Date().toLocaleString()} - Socket timeout at login`);
+        console.log(`${poolName}: ${new Date().toLocaleString()} - Socket timeout at login`);
         process.exit(-1);
     });
 
@@ -60,12 +62,11 @@ async function login() {
         if (data.startsWith("2")) {
             socket.write(`PoolLogin,${JSON.stringify(loginInfos)}`);
         } else if (data === "LoginOK") {
-            console.log(`${poolID}: ${new Date().toLocaleString()} - Successfully logged in`);
+            console.log(`${poolName}: ${new Date().toLocaleString()} - Successfully logged in`);
             socket.destroy();
             sync();
-            setInterval(sync, SYNC_TIME);
         } else {
-            console.log(`${poolID}: ${new Date().toLocaleString()} - Unknown error, server returned ${data} in login`);
+            console.log(`${poolName}: ${new Date().toLocaleString()} - Unknown error, server returned ${data} in login`);
             process.exit(-1)
         }
     })
@@ -79,16 +80,16 @@ function logout() {
             socket.setTimeout(TIMEOUT);
             socket.connect(serverPort, serverIP);
         } catch (err) {
-            console.log(`${poolID}: ${new Date().toLocaleString()} - Socket error at connect: ${err}`);
+            console.log(`${poolName}: ${new Date().toLocaleString()} - Socket error at connect: ${err}`);
         }
 
         socket.on("error", (err) => {
-            console.log(`${poolID}: ${new Date().toLocaleString()} - Socket error at logout: ${err}`);
+            console.log(`${poolName}: ${new Date().toLocaleString()} - Socket error at logout: ${err}`);
             reject(1);
         });
 
         socket.on("timeout", () => {
-            console.log(`${poolID}: ${new Date().toLocaleString()} - Socket timeout at logout`);
+            console.log(`${poolName}: ${new Date().toLocaleString()} - Socket timeout at logout`);
             reject(1);
         });
 
@@ -96,10 +97,10 @@ function logout() {
             if (data.startsWith("2")) {
                 socket.write(`PoolLogout,${poolID}`);
             } else if (data === "LogoutOK") {
-                console.log(`${poolID}: ${new Date().toLocaleString()} - Successfully logged out`)
+                console.log(`${poolName}: ${new Date().toLocaleString()} - Successfully logged out`)
                 resolve();
             } else {
-                console.log(`${poolID}: ${new Date().toLocaleString()} - Unknown error, server returned ${data} in logout`);
+                console.log(`${poolName}: ${new Date().toLocaleString()} - Unknown error, server returned ${data} in logout`);
                 reject(data);
             }
         })
@@ -127,11 +128,11 @@ async function sync() {
         connections: connections
     }
 
-    fs.writeFileSync(`${base_sync_folder}/workers_${poolID}.json`, JSON.stringify(mining.stats.minersStats, null, 0));
-    fs.writeFileSync(`${base_sync_folder}/rewards_${poolID}.json`, JSON.stringify(mining.stats.balancesToUpdate, null, 0));
-    fs.writeFileSync(`${base_sync_folder}/statistics_${poolID}.json`, JSON.stringify(syncData, null, 0));
+    fs.writeFileSync(`${base_sync_folder}/workers_${poolName}.json`, JSON.stringify(mining.stats.minersStats, null, 0));
+    fs.writeFileSync(`${base_sync_folder}/rewards_${poolName}.json`, JSON.stringify(mining.stats.balancesToUpdate, null, 0));
+    fs.writeFileSync(`${base_sync_folder}/statistics_${poolName}.json`, JSON.stringify(syncData, null, 0));
 
-    let request_url = `https://server.duinocoin.com/pool_sync/?host=${ip}&port=${port}&version=${poolVersion}&identifier=${poolID}&blockIncrease=${blockIncrease}&bigBlocks=${globalBlocks}&cpu=${cpuUsage}&ram=${ramUsage}&connections=${connections}`;
+    let request_url = `https://${serverIP}/pool_sync/?host=${ip}&port=${port}&version=${poolVersion}&identifier=${poolID}&name=${poolName}&blockIncrease=${blockIncrease}&bigBlocks=${globalBlocks}&cpu=${cpuUsage}&ram=${ramUsage}&connections=${connections}`;
 
     try {
         sync_count += 1;
@@ -143,28 +144,30 @@ async function sync() {
                         delete mining.stats.balancesToUpdate[k];
                     });
                     globalBlocks = [];
-                    console.log(`${poolID}: ${new Date().toLocaleString()} - Successfull sync #${sync_count}`);
+                    console.log(`${poolName}: ${new Date().toLocaleString()} - Successfull sync #${sync_count}`);
                 } else {
-                    console.log(`${poolID}: ${new Date().toLocaleString()} - Server error at sync #${sync_count}: ${response.data.message}`);
+                    console.log(`${poolName}: ${new Date().toLocaleString()} - Server error at sync #${sync_count}: ${response.data.message}`);
                 }
             }
         })
         .catch(function (error) {
-            console.log(`${poolID}: ${new Date().toLocaleString()} - Socket error at sync`);
+            console.log(`${poolName}: ${new Date().toLocaleString()} - Socket error at sync`);
         })
     } catch (err) {
-        console.log(`${poolID}: ${new Date().toLocaleString()} - Other error at sync: ${err}`);
+        console.log(`${poolName}: ${new Date().toLocaleString()} - Other error at sync: ${err}`);
     }
+
+    setTimeout(sync, SYNC_TIME);
 }
 
 function updatePoolReward() {
     axios.get('https://server.duinocoin.com/PoolRewards.json')
     .then(response => {
         fs.writeFileSync('./config/poolRewards.json', JSON.stringify(response.data, null, 0));
-        console.log(`${poolID}: ${new Date().toLocaleString()} - Updated pool rewards file`)
+        console.log(`${poolName}: ${new Date().toLocaleString()} - Updated pool rewards file`)
     })
     .catch(function (error) {
-        console.log(`${poolID}: Error at updating pool rewards file`);
+        console.log(`${poolName}: Error at updating pool rewards file`);
     });
 
     bans = require('../config/bans.json');
@@ -175,10 +178,10 @@ function updatePoolReward() {
                 bans.bannedUsernames.push(username);
 
         fs.writeFileSync('./config/bans.json', JSON.stringify(bans, null, 0));
-        console.log(`${poolID}: ${new Date().toLocaleString()} - Updated bans file`);
+        console.log(`${poolName}: ${new Date().toLocaleString()} - Updated bans file`);
     })
     .catch(function (error) {
-        console.log(`${poolID}: ${new Date().toLocaleString()} - Error at updating bans file`);
+        console.log(`${poolName}: ${new Date().toLocaleString()} - Error at updating bans file`);
     });
 
     setTimeout(updatePoolReward, 60 * 5 * 1000);
