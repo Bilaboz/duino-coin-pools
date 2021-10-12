@@ -7,6 +7,7 @@ const poolRewards = require("../config/poolRewards.json");
 const highestPCdiff = 150000;
 const highestAVRdiff = 1500;
 const pcMiningPercentage = poolRewards["NET"]["kolka_decrease_perc"] * 0.01;
+const espMiningPercentage = poolRewards["ESP32"]["kolka_decrease_perc"] * 0.01;
 const avrMiningPercentage = poolRewards["AVR"]["kolka_decrease_perc"] * 0.01;
 
 function V1(hashrate, difficulty, workers, reward_div) {
@@ -21,7 +22,7 @@ function V1(hashrate, difficulty, workers, reward_div) {
     if (difficulty > highestPCdiff) {
         output = 2 * (output * (Math.pow(pcMiningPercentage, workers - 1)) / (poolRewards["EXTREME"]["reward"] * workers));
     } else if (difficulty > poolRewards["ESP32"]["difficulty"]) {
-        output = 2 * (output * (Math.pow(pcMiningPercentage, workers - 1)));
+        output = 2 * (output * (Math.pow(espMiningPercentage, workers - 1)));
     } else {
         output = 2 * (output * (Math.pow(avrMiningPercentage, workers - 1)));
     }
@@ -51,6 +52,9 @@ function V2(currDiff) {
         return "MEDIUM";
     case "MEDIUM":
         return "NET";
+    case "NET":
+        return "EXTREME";
+    case "EXTREME":
         return "EXTREME";
     }
 }
@@ -79,7 +83,8 @@ function V2_REVERSE(currDiff) {
         return "LOW";
     case "NET":
         return "MEDIUM";
-        return "EXTREME";
+    case "EXTREME":
+        return "NET";
     }
 }
 
