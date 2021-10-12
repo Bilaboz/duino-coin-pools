@@ -79,6 +79,8 @@ const handle = (conn) => {
             mining.miningHandler(conn, data, mainListener, false, false);
 
         } else if (data[0] === 'JOBXX') {
+            conn.write('NO,XXHASH is disabled');
+            return conn.destroy();
             if (!data[1]) {
                 conn.write('NO,Not enough data');
                 return conn.destroy();
