@@ -10,6 +10,7 @@ const mining = require("./mining");
 
 const {
     poolID,
+    poolName,
     port,
     host
 } = require("../config/config.json");
@@ -44,7 +45,7 @@ setInterval(() => {
     server.getConnections((error, count) => {
         if (!error) {
             connections = count;
-            console.log(`${poolID}: ${new Date().toLocaleString()} - Connected clients: ${count}`);
+            console.log(`${poolName}: ${new Date().toLocaleString()} - Connected clients: ${count}`);
         }
     });
 }, 10000);
