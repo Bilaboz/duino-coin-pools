@@ -58,6 +58,15 @@ function receiveData(conn) {
     })
 }
 
+function getRand(max) {
+    try {
+        return crypto.randomInt(max);
+    } catch (err) {
+        console.log(err);
+        return Math.floor(Math.random() * max);
+    }
+};
+
 async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
     let job,
     random,
@@ -67,7 +76,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
     this_miner_chipid;
     let isFirstShare = true;
     let overrideDifficulty = '';
-    let acceptedShares = 0,
+    let acceptedShares = 1,
     rejectedShares = 0;
     let this_miner_id = 1;
     const username = data[1];
@@ -76,7 +85,6 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
     // remove the main listener to not re-trigger miningHandler()
     conn.removeListener('data', mainListener);
     while (true) {
-        let poolRewards = require('../config/poolRewards.json');
         if (isFirstShare) {
             if (usingXxhash) {
                 reqDifficulty = 'XXHASH';
@@ -101,12 +109,15 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
         } else {
             data = await receiveData(conn);
             data = data.split(',');
-            if (usingAVR && !overrideDifficulty) {
-                reqDifficulty = 'AVR';
-            } else if (!overrideDifficulty) {
-                reqDifficulty = data[2] ? data[2] : 'NET';
-            } else {
+
+            if (overrideDifficulty) {
                 reqDifficulty = overrideDifficulty;
+            }
+            else if (usingAVR) {
+                reqDifficulty = 'AVR';
+            }
+            else {
+                reqDifficulty = data[2] ? data[2] : 'NET';
             }
         }
 
@@ -122,6 +133,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             }
         }
 
+        poolRewards = require('../config/poolRewards.json');
         if (!poolRewards.hasOwnProperty(reqDifficulty))
             reqDifficulty = 'NET';
         let diff = getDiff(poolRewards, reqDifficulty);
@@ -130,12 +142,12 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             diff = kolka.V3(sharetime, expectedSharetime, diff);
         }
 
-        let sentTimestamp,
-        answer,
+        let sentTimestamp = 0,
+        answer = "",
         i = 0,
-        job;
+        job = [];
         while (i < 3) {
-            random = Math.floor((Math.random() * diff * 100) + 1);
+            random = getRand(diff * 100) + 1;
             if (usingXxhash) {
                 newHash = XXH.h64(lastBlockhash + random, 2811).toString(16);
             } else {
@@ -188,10 +200,16 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
 
         if (hashrate < minHashrate) {
             overrideDifficulty = kolka.V2_REVERSE(reqDifficulty);
+            rejectedShares++;
             conn.write('BAD\n');
-        } else if (hashrate > maxHashrate) {
+            if (rejectedShares > 10)
+                conn.destroy();
+        } else if (hashrate >= maxHashrate && diff != getDiff(poolRewards, 'ESP32')) {
             overrideDifficulty = kolka.V2(reqDifficulty);
+            rejectedShares++;
             conn.write('BAD\n');
+            if (rejectedShares > 10)
+                conn.destroy();
         } else if (miner_res === random) {
             acceptedShares++;
 
@@ -238,10 +256,11 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
         else
             balancesToUpdate[data[1]] = reward;
 
-        if (acceptedShares % updateMinersStatsEvery === 0) {
-            let minerName,
-            rigIdentifier,
-            wallet_id;
+        if (acceptedShares > 0 && 
+            acceptedShares % updateMinersStatsEvery === 0) {
+            let minerName = "",
+            rigIdentifier = "",
+            wallet_id = null;
 
             try {
                 minerName = answer[2].match(/[A-Za-z0-9 .()-]+/g).join(' ');
@@ -264,7 +283,6 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             const minerStats = {
                 'u': data[1],
                 'h': hashrateIsEstimated ? hashrate : reportedHashrate,
-                //'he': hashrateIsEstimated,
                 's': sharetime,
                 'a': acceptedShares,
                 'r': rejectedShares,
@@ -276,6 +294,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
                 't': Math.floor(new Date() / 1000),
                 'wd': wallet_id,
             }
+
             minersStats[conn.id] = minerStats;
 
             lastBlockhash = newHash;
