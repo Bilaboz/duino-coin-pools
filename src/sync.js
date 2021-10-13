@@ -132,27 +132,25 @@ async function sync() {
     fs.writeFileSync(`${base_sync_folder}/rewards_${poolName}.json`, JSON.stringify(mining.stats.balancesToUpdate, null, 0));
     fs.writeFileSync(`${base_sync_folder}/statistics_${poolName}.json`, JSON.stringify(syncData, null, 0));
 
-    let request_url = `https://${serverIP}/pool_sync/?host=${ip}&port=${port}&version=${poolVersion}&identifier=${poolID}&name=${poolName}&blockIncrease=${blockIncrease}&bigBlocks=${globalBlocks}&cpu=${cpuUsage}&ram=${ramUsage}&connections=${connections}`;
+    const request_url = `https://${serverIP}/pool_sync/?host=${ip}&port=${port}&version=${poolVersion}&identifier=${poolID}&name=${poolName}&blockIncrease=${blockIncrease}&bigBlocks=${globalBlocks}&cpu=${cpuUsage}&ram=${ramUsage}&connections=${connections}`;
 
     try {
-        sync_count += 1;
-        axios.get(request_url)
-        .then(response => {
-            if (response) {
-                if (response.data.success) {
-                    Object.keys(mining.stats.balancesToUpdate).forEach(k => {
-                        delete mining.stats.balancesToUpdate[k];
-                    });
-                    globalBlocks = [];
-                    console.log(`${poolName}: ${new Date().toLocaleString()} - Successfull sync #${sync_count}`);
-                } else {
-                    console.log(`${poolName}: ${new Date().toLocaleString()} - Server error at sync #${sync_count}: ${response.data.message}`);
-                }
+        sync_count++;
+        try {
+            const response = await axios.get(request_url);
+
+            if (response && response.data.success) {
+                Object.keys(mining.stats.balancesToUpdate).forEach(k => {
+                    delete mining.stats.balancesToUpdate[k];
+                });
+                globalBlocks = [];
+                console.log(`${poolName}: ${new Date().toLocaleString()} - Successfull sync #${sync_count}`);
+            } else {
+                console.log(`${poolName}: ${new Date().toLocaleString()} - Server error at sync #${sync_count}: ${response.data.message}`);
             }
-        })
-        .catch(function (error) {
+        } catch (err) {
             console.log(`${poolName}: ${new Date().toLocaleString()} - Socket error at sync`);
-        })
+        }
     } catch (err) {
         console.log(`${poolName}: ${new Date().toLocaleString()} - Other error at sync: ${err}`);
     }
@@ -160,29 +158,27 @@ async function sync() {
     setTimeout(sync, SYNC_TIME);
 }
 
-function updatePoolReward() {
-    axios.get('https://server.duinocoin.com/PoolRewards.json')
-    .then(response => {
+async function updatePoolReward() {
+    try {
+        const response = await axios.get('https://server.duinocoin.com/PoolRewards.json');
         fs.writeFileSync('./config/poolRewards.json', JSON.stringify(response.data, null, 0));
-        console.log(`${poolName}: ${new Date().toLocaleString()} - Updated pool rewards file`)
-    })
-    .catch(function (error) {
+        console.log(`${poolName}: ${new Date().toLocaleString()} - Updated pool rewards file`);
+    } catch (err) {
         console.log(`${poolName}: Error at updating pool rewards file`);
-    });
+    };
 
     bans = require('../config/bans.json');
-    axios.get('https://server.duinocoin.com/poolsyncdata/bans.json')
-    .then(response => {
+    try {
+        const response = await axios.get('https://server.duinocoin.com/poolsyncdata/bans.json');
         for (username in response)
             if (!bans.bannedUsernames.includes[username])
                 bans.bannedUsernames.push(username);
 
         fs.writeFileSync('./config/bans.json', JSON.stringify(bans, null, 0));
         console.log(`${poolName}: ${new Date().toLocaleString()} - Updated bans file`);
-    })
-    .catch(function (error) {
+    } catch (err) {
         console.log(`${poolName}: ${new Date().toLocaleString()} - Error at updating bans file`);
-    });
+    }
 
     setTimeout(updatePoolReward, 60 * 5 * 1000);
 }
