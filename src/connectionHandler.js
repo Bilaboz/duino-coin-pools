@@ -16,7 +16,7 @@ let bans = require('../config/bans.json');
 const handle = (conn) => {
     conn.id = Math.random().toString(36).substr(2, 9);
     try {
-        conn.setTimeout(10000);
+        conn.setTimeout(15000);
         conn.setNoDelay(true);
         conn.setEncoding('utf8');
         conn.write(serverVersion);
@@ -73,23 +73,23 @@ const handle = (conn) => {
 
         if (data[0] === 'JOB') {
             if (!data[1]) {
-                conn.write('NO,Not enough data');
+                conn.write('BAD,No username specified\n');
                 return conn.destroy();
             }
             mining.miningHandler(conn, data, mainListener, false, false);
 
         } else if (data[0] === 'JOBXX') {
-            conn.write('NO,XXHASH is disabled');
+            conn.write('BAD,XXHASH is disabled');
             return conn.destroy();
             if (!data[1]) {
-                conn.write('NO,Not enough data');
+                conn.write('BAD,No username specified\n');
                 return conn.destroy();
             }
             mining.miningHandler(conn, data, mainListener, true, false);
 
         } else if (data[0] === 'MOTD') {
             let finalMOTD = motd;
-            finalMOTD += `\nPool worker limit: ${maxWorkers}`
+            //finalMOTD += `\nPool worker limit: ${maxWorkers}`
             conn.write(finalMOTD);
         }
     })
