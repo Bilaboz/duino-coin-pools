@@ -39,11 +39,11 @@ function getDiff(poolRewards, textDiff) {
     return difficulty;
 }
 
-function checkWorkers(ipWorkers, usrWorkers) {
+function checkWorkers(ipWorkers, usrWorkers, serverMiners) {
     if (maxWorkers <= 0)
         return false;
 
-    if (Math.max(ipWorkers, usrWorkers) > maxWorkers) {
+    if (Math.max(ipWorkers, usrWorkers, serverMiners) > maxWorkers) {
         return true;
     }
     return false;
@@ -104,8 +104,29 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
                 usrWorkers[username] = 1;
             }
 
+            try {
+                serverMiners = require('../config/serverMiners.json');
+                serverMiners = serverMiners[username]["w"];
+            } catch (err) { serverMiners = 0; }
+
+            if (conn.remoteAddress != '51.15.127.80') {
+                if (checkWorkers(workers[conn.remoteAddress], usrWorkers[username], serverMiners)) {
+                    setTimeout(function() {
+                        conn.write(`BAD,Too many workers - current limit: ${maxWorkers}`);
+                        return conn.destroy();
+                    }, 2500);
+                }
+            } else {
+                if (checkWorkers(0, usrWorkers[username], serverMiners)) {
+                    setTimeout(function() {
+                        conn.write(`BAD,Too many workers - current limit: ${maxWorkers}`);
+                        return conn.destroy();
+                    }, 2500);
+                }
+            }
+
             let this_miner_id =
-                Math.max(usrWorkers[username], workers[conn.remoteAddress])
+                Math.max(usrWorkers[username], workers[conn.remoteAddress], serverMiners)
         } else {
             data = await receiveData(conn);
             data = data.split(',');
@@ -118,18 +139,6 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             }
             else {
                 reqDifficulty = data[2] ? data[2] : 'NET';
-            }
-        }
-
-        if (conn.remoteAddress != '51.15.127.80') {
-            if (checkWorkers(workers[conn.remoteAddress], usrWorkers[username])) {
-                conn.write(`BAD,Too many workers current limit: ${maxWorkers}`);
-                return conn.destroy();
-            }
-        } else {
-            if (checkWorkers(0, usrWorkers[username])) {
-                conn.write(`BAD,Too many workers current limit: ${maxWorkers}`);
-                return conn.destroy();
             }
         }
 
@@ -160,9 +169,12 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             conn.write(job.toString());
             sentTimestamp = new Date().getTime();
 
-            conn.setTimeout(60000);
+            if (diff <= getDiff(poolRewards, 'ESP32')) conn.setTimeout(45000);
+            else conn.setTimeout(90000);
+
             answer = await receiveData(conn);
-            conn.setTimeout(10000);
+
+            conn.setTimeout(15000);
 
             if (!answer.includes("JOB"))
                 break;
@@ -201,15 +213,11 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
         if (hashrate < minHashrate) {
             overrideDifficulty = kolka.V2_REVERSE(reqDifficulty);
             rejectedShares++;
-            conn.write('BAD\n');
-            if (rejectedShares > 10)
-                conn.destroy();
-        } else if (hashrate >= maxHashrate && diff != getDiff(poolRewards, 'ESP32')) {
+            conn.write('BAD,Incorrect difficulty\n');
+        } else if (hashrate >= maxHashrate) {
             overrideDifficulty = kolka.V2(reqDifficulty);
             rejectedShares++;
-            conn.write('BAD\n');
-            if (rejectedShares > 10)
-                conn.destroy();
+            conn.write('BAD,Incorrect difficulty\n');
         } else if (miner_res === random) {
             acceptedShares++;
 
@@ -246,18 +254,16 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
                 conn.write('GOOD\n');
         } else {
             rejectedShares++;
-            conn.write('BAD\n');
-            if (rejectedShares > 10)
-                conn.destroy();
+            conn.write('BAD,Incorrect result\n');
         }
-
-        if (balancesToUpdate[data[1]])
-            balancesToUpdate[data[1]] += reward;
-        else
-            balancesToUpdate[data[1]] = reward;
 
         if (acceptedShares > 0 && 
             acceptedShares % updateMinersStatsEvery === 0) {
+            if (balancesToUpdate[data[1]])
+                balancesToUpdate[data[1]] += reward;
+            else
+                balancesToUpdate[data[1]] = reward;
+
             let minerName = "",
             rigIdentifier = "",
             wallet_id = null;
