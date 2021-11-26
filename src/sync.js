@@ -77,7 +77,7 @@ async function get_pool_ip() {
                 });
 
             ip = res.data;
-            port = require("../config/config.json");
+            port = require("../config/config.json").port;
 
             console.log(`${poolName}: ${new Date().toLocaleString()} ` + info(`Fetched pool IP: ${ip}:${port}`));
             break;
@@ -192,9 +192,9 @@ async function sync() {
         connections: connections
     }
 
-    fs.writeFileSync(`dashboard/workers_${poolName}.json`, JSON.stringify(mining.stats.minersStats, null, 0));
-    fs.writeFileSync(`dashboard/rewards_${poolName}.json`, JSON.stringify(mining.stats.balancesToUpdate, null, 0));
-    // fs.writeFileSync(`dashboard/statistics_${poolName}.json`, JSON.stringify(syncData, null, 0));
+    fs.writeFileSync(`${base_sync_folder}/workers_${poolName}.json`, JSON.stringify(mining.stats.minersStats, null, 0));
+    fs.writeFileSync(`${base_sync_folder}/rewards_${poolName}.json`, JSON.stringify(mining.stats.balancesToUpdate, null, 0));
+    // fs.writeFileSync(`${base_sync_folder}/statistics_${poolName}.json`, JSON.stringify(syncData, null, 0));
 
     let request_url = `https://${serverIP}/pool_sync/`
          + `?host=${ip}&port=${port}&version=${poolVersion}`
@@ -203,9 +203,9 @@ async function sync() {
          + `&cpu=${cpuUsage}&ram=${ramUsage}&connections=${connections}`;
 
     let form = new FormData();
-    form.append('rewards', fs.readFileSync(`dashboard/workers_${poolName}.json`), `workers_${poolName}.json`);
-    form.append('workers', fs.readFileSync(`dashboard/workers_${poolName}.json`), `rewards_${poolName}.json`);
-    // form.append('statistics', fs.readFileSync(`dashboard/statistics_${poolName}.json`), `rewards_${poolName}.json`);
+    form.append('rewards', fs.readFileSync(`${base_sync_folder}/rewards_${poolName}.json`), `rewards_${poolName}.json`);
+    form.append('workers', fs.readFileSync(`${base_sync_folder}/workers_${poolName}.json`), `workers_${poolName}.json`);
+    // form.append('statistics', fs.readFileSync(`${base_sync_folder}/statistics_${poolName}.json`), `rewards_${poolName}.json`);
 
     try {
         sync_count += 1;
