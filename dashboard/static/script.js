@@ -14,7 +14,7 @@ function fetch_statistics() {
 }
 
 fetch_statistics();
-setInterval(function() {
+setInterval(() => {
     // run every 5s
     fetch_statistics(); 
 }, 5000);

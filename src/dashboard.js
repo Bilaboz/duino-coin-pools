@@ -34,7 +34,7 @@ app.get("/rewards", (req, res) => {
     res.sendFile(path.resolve(`${base_sync_folder}/rewards_${poolID}.json`));
 })
 
-app.get("/statistics", async(req, res) => {
+app.get("/statistics", async (req, res) => {
     require("./index");
 
     const cpuUsage = await osu.cpu.usage();

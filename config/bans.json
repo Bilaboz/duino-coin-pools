@@ -1,8 +1,1 @@
-{
-    "bannedUsernames": [
-        "bad_guy1337"
-    ],
-    "bannedIPs": [
-        
-    ]
-}
+{"bannedUsernames":["bad_guy1337","status","statusText","headers","config","request","data"],"bannedIPs":[]}
