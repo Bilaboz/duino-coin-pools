@@ -6,6 +6,7 @@ https://github.com/revoxhere/duino-coin/blob/useful-tools
 const fs = require('fs');
 const axios = require('axios');
 const mining = require('./mining');
+const crypto = require('crypto');
 const {
     maxWorkers,
     motd,
@@ -13,14 +14,39 @@ const {
 } = require('../config/config.json');
 let bans = require('../config/bans.json');
 
+function getHttpCode() {
+    http_codes = [
+        "201 Created",
+        "203 Non-Authoritative Information",
+        "208 Already Reported",
+        "226 IM Used",
+        "303 See Other",
+        "402 Payment Required",
+        "406 Not Acceptable",
+        "408 Request Timeout",
+        "410 Gone",
+        "413 Payload Too Large",
+        "422 Unprocessable Entity",
+        "425 Too Early",
+        "426 Upgrade Required",
+        "451 Unavailable For Legal Reasons",
+        "506 Variant Also Negotiates",
+        "508 Loop Detected"
+    ]
+    return http_codes[Math.floor(Math.random() * http_codes.length)];
+}
+
 const handle = (conn) => {
-    conn.id = Math.random().toString(36).substr(2, 9);
+    conn.username = undefined;
+    conn.id = crypto.randomBytes(4).toString('hex');
     try {
-        conn.setTimeout(10000);
+        conn.setTimeout(20000);
         conn.setNoDelay(true);
         conn.setEncoding('utf8');
         conn.write(serverVersion);
-    } catch (err) {}
+    } catch (err) {
+        return conn.destroy();
+    }
 
     conn.on('close', () => {
         try {
@@ -50,46 +76,58 @@ const handle = (conn) => {
         data = data.trim().split(',');
 
         if (data.length > 5) {
-            conn.write('101 Switching Protocol');
+            conn.write(getHttpCode());
             return conn.destroy();
         }
 
         if (!conn.remoteAddress) {
-            conn.write('418 I\'m a teapot');
+            conn.write(getHttpCode());
             return conn.destroy();
         }
 
-        if (bans.bannedIPs.includes(conn.remoteAddress)) {
-            conn.write('204 No Content');
+        if (bans.bannedIPs.includes(conn.remoteAddress) && conn.remoteAddress != "127.0.0.1") {
+            conn.write(getHttpCode());
             return conn.destroy();
         }
 
-        if (bans.bannedUsernames.includes(data[1])) {
-            conn.write('301 Moved Permanently');
-            bans.bannedIPs.push(conn.remoteAddress);
-            fs.writeFileSync('../config/bans.json', JSON.stringify(bans, null, 0));
+        if (bans.bannedUsernames.includes(data[1]) && conn.remoteAddress != "127.0.0.1") {
+            if (conn.remoteAddress != "127.0.0.1")
+                bans.bannedIPs.push(conn.remoteAddress);
+            try {
+                fs.writeFileSync('../config/bans.json', JSON.stringify(bans, null, 0));
+            } catch (err) {
+                console.log(err);
+            }
+            conn.write(getHttpCode());
             return conn.destroy();
         }
 
         if (data[0] === 'JOB') {
             if (!data[1]) {
-                conn.write('NO,Not enough data');
+                conn.write('BAD,No username specified\n');
                 return conn.destroy();
+            } else {
+                if (!conn.username)
+                    conn.username = data[1];
+                else if (conn.username != data[1]) {
+                    conn.write(getHttpCode());
+                    return conn.destroy();
+                }
+                mining.miningHandler(conn, data, mainListener, false, false);
             }
-            mining.miningHandler(conn, data, mainListener, false, false);
 
         } else if (data[0] === 'JOBXX') {
-            conn.write('NO,XXHASH is disabled');
+            conn.write('BAD,XXHASH is disabled');
             return conn.destroy();
             if (!data[1]) {
-                conn.write('NO,Not enough data');
+                conn.write('BAD,No username specified\n');
                 return conn.destroy();
             }
             mining.miningHandler(conn, data, mainListener, true, false);
 
         } else if (data[0] === 'MOTD') {
             let finalMOTD = motd;
-            finalMOTD += `\nPool worker limit: ${maxWorkers}`
+            //finalMOTD += `\nPool worker limit: ${maxWorkers}`
             conn.write(finalMOTD);
         }
     })

@@ -6,7 +6,15 @@ https://github.com/revoxhere/duino-coin/blob/useful-tools
 const express = require("express");
 const osu = require("node-os-utils");
 const path = require("path");
+
+const chalk = require('chalk');
+const error = chalk.bold.red;
+const info = chalk.blue;
+const success = chalk.green;
+const warning = chalk.hex('#FFA500');
+
 const {
+    poolName,
     dashboard_port,
     base_sync_folder
 } = require("../config/config.json");
@@ -41,4 +49,4 @@ app.get("/statistics", async (req, res) => {
 })
 
 app.listen(dashboard_port);
-console.log(`Dashboard listening on port ${dashboard_port}`);
+console.log(`${poolName}: ${new Date().toLocaleString()}` + info(` Dashboard listening on port ${dashboard_port}`));
