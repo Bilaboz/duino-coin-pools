@@ -17,6 +17,8 @@
     "serverIP": "server.duinocoin.com",
     "serverPort": 2809,
     "serverVersion": "2.7",
+    "server_sync_url": "",
+    "use_ngrok": false,
 
     "base_sync_folder": "../dashboard/",
     "initialBlockHash": "05b7406b3909071b2d85b2d2958ad07a0d52bd12",
