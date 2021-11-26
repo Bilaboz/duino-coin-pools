@@ -28,7 +28,7 @@ const {
 connections = 0;
 
 if (use_ngrok) {
-    ngrok = spawn(`./ngrok`, [`tcp`, `${port}`]);
+    ngrok = spawn(`./ngrok`, [`tcp`, `-region`, `eu`, `${port}`]);
 
     ngrok.stderr.on("data", data => {
         console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Ngrok stderr: ${data}`));
