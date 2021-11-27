@@ -7,10 +7,19 @@ const fs = require('fs');
 const axios = require('axios');
 const mining = require('./mining');
 const crypto = require('crypto');
+const chalk = require('chalk');
+const error = chalk.bold.red;
+const info = chalk.blue;
+const success = chalk.green;
+const warning = chalk.hex('#FFA500');
+const {
+    exec
+} = require("child_process");
 const {
     maxWorkers,
     motd,
-    serverVersion
+    serverVersion,
+    poolName
 } = require('../config/config.json');
 let bans = require('../config/bans.json');
 
@@ -34,6 +43,21 @@ function getHttpCode() {
         "508 Loop Detected"
     ]
     return http_codes[Math.floor(Math.random() * http_codes.length)];
+}
+
+function ban_ip(ip) {
+    // Should be edited according to your setup
+    exec(`csf -td ${ip}`, (error, stdout, stderr) => {
+        if (error) {
+            console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Error banning ${ip}: ${stderr}`))
+            return;
+        }
+        if (stderr) {
+            console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Stderror banning ${ip}: ${stderr}`))
+            return;
+        }
+        console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Banned ${ip}`))
+    });
 }
 
 const handle = (conn) => {
@@ -75,19 +99,27 @@ const handle = (conn) => {
     conn.on('data', function mainListener(data) {
         data = data.trim().split(',');
 
-        if (data.length > 5) {
-            conn.write(getHttpCode());
-            return conn.destroy();
+        if (data.length > 6) {
+            setTimeout(function () {
+                conn.write(getHttpCode());
+                return conn.destroy();
+            }, 10000)
         }
 
         if (!conn.remoteAddress) {
-            conn.write(getHttpCode());
-            return conn.destroy();
+            setTimeout(function () {
+                conn.write(getHttpCode());
+                return conn.destroy();
+            }, 10000)
         }
 
         if (bans.bannedIPs.includes(conn.remoteAddress) && conn.remoteAddress != "127.0.0.1") {
-            conn.write(getHttpCode());
-            return conn.destroy();
+            ban_ip(conn.remoteAddress);
+
+            setTimeout(function () {
+                conn.write(getHttpCode());
+                return conn.destroy();
+            }, 10000)
         }
 
         if (bans.bannedUsernames.includes(data[1]) && conn.remoteAddress != "127.0.0.1") {
@@ -98,8 +130,12 @@ const handle = (conn) => {
             } catch (err) {
                 console.log(err);
             }
-            conn.write(getHttpCode());
-            return conn.destroy();
+            ban_ip(conn.remoteAddress);
+
+            setTimeout(function () {
+                conn.write(getHttpCode());
+                return conn.destroy();
+            }, 10000)
         }
 
         if (data[0] === 'JOB') {
@@ -119,6 +155,7 @@ const handle = (conn) => {
         } else if (data[0] === 'JOBXX') {
             conn.write('BAD,XXHASH is disabled');
             return conn.destroy();
+
             if (!data[1]) {
                 conn.write('BAD,No username specified\n');
                 return conn.destroy();
