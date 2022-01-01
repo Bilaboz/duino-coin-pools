@@ -153,11 +153,11 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
         }
 
         if (conn.remoteAddress != '127.0.0.1') {
-            if (await checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
+            if (checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
                 conn.reject_shares = true;
             }
         } else {
-            if (await checkWorkers(0, usrWorkers[conn.username], conn.serverMiners)) {
+            if (checkWorkers(0, usrWorkers[conn.username], conn.serverMiners)) {
                 conn.reject_shares = true;
             }
         }
