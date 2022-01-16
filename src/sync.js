@@ -8,6 +8,12 @@ const axios = require("axios");
 const fs = require("fs");
 const osu = require("node-os-utils");
 
+let mining = require("./mining");
+
+// loads initial values to these dicts
+let poolRewards = {}
+let serverMiners = {}
+
 const FormData = require('form-data');
 const dns = require('dns');
 
@@ -113,12 +119,10 @@ async function login() {
 
     socket.on("error", (err) => {
         console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Socket error at login: ${err}`));
-        process.exit(-1);
     });
 
     socket.on("timeout", () => {
         console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Socket timeout at login`));
-        process.exit(-1);
     });
 
     socket.on("data", (data) => {
@@ -127,13 +131,14 @@ async function login() {
         } else if (data === "LoginOK") {
             console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Successfully logged in`));
             socket.destroy();
-            sync();
-            updateMinerCount();
         } else {
             console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Unknown error, server returned ${data} in login`));
             process.exit(-1)
         }
     })
+
+    sync();
+    updateMinerCount();
 }
 
 function logout() {
@@ -243,28 +248,34 @@ function updatePoolReward() {
         timeout: SYNC_TIME
     })
     .then(response => {
-        fs.writeFileSync('./config/poolRewards.json', JSON.stringify(response.data, null, 2));
+        poolRewards = response.data;
+        fs.writeFileSync('./config/poolRewards.json', JSON.stringify(poolRewards, null, 2));
         console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Updated pool rewards file`));
     })
     .catch(function (err) {
         console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Error updating pool rewards file: ${err}`));
     });
+    //delete require.cache['./config/poolRewards.json'];
+    //delete require.cache[require.resolve('../config/poolRewards.json')];
+    //console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Deleted poolRewards cache`));
 
-    bans = require('../config/bans.json');
+    bans = JSON.parse(fs.readFileSync('./config/bans.json', 'utf8'));
     axios.get(`${server_sync_url}/bans.json`, {
         timeout: TIMEOUT
     })
     .then(response => {
         bans.bannedUsernames = response.data;
-
         fs.writeFileSync('./config/bans.json', JSON.stringify(bans, null, 2));
         console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Updated bans file`));
     })
     .catch(function (err) {
         console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Error updating bans file: ${err}`));
     });
+    //delete require.cache['./config/bans.json'];
+    //delete require.cache[require.resolve('../config/bans.json')];
+    //console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Deleted bans cache`));
 
-    setTimeout(updatePoolReward, SYNC_TIME * 10);
+    //setTimeout(updatePoolReward, SYNC_TIME);
 }
 
 function updateMinerCount() {
@@ -272,18 +283,24 @@ function updateMinerCount() {
         timeout: TIMEOUT
     })
     .then(response => {
+        serverMiners = response.data.result;
         fs.writeFileSync('./config/serverMiners.json', JSON.stringify(response.data.result, null, 2));
         console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Updated miner count file`));
     })
     .catch(function (err) {
         console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Error updating miner count file: ${err}`));
     });
+    //delete require.cache['./config/serverMiners.json'];
+    //delete require.cache[require.resolve('../config/serverMiners.json')];
+    //console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Deleted serverMiners cache`));
 
-    setTimeout(updateMinerCount, SYNC_TIME / 2);
+    //setTimeout(updateMinerCount, SYNC_TIME);
 }
 
 module.exports = {
     login,
     logout,
-    updatePoolReward
+    updatePoolReward,
+    poolRewards,
+    serverMiners
 };

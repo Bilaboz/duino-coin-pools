@@ -1,17 +1,25 @@
 {
   "name": "duino-coin-pools",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node src/index"
   },
-  "author": "Bilaboz",
+  "author": "Bilaboz, revoxsvko",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.21.1",
+    "import-fresh": "^3.3.0",
+    "axios": "^0.21.4",
+    "chalk": "^4.1.2",
+    "child_process": "^1.0.2",
+    "compat": "^1.0.4",
     "express": "^4.17.1",
+    "form-data": "^4.0.0",
+    "import-fresh": "^3.3.0",
     "node-os-utils": "^1.3.5",
+    "random-number-csprng": "1.0.2",
+    "uint32": "^0.2.1",
     "xxhashjs": "^0.2.2"
   }
 }

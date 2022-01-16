@@ -20,33 +20,14 @@ const {
 } = require("../config/config.json");
 const app = express();
 
-app.use(express.static(path.resolve(__dirname + "/../dashboard/static")));
-
-app.get("/", (req, res) => {
-    res.sendFile(path.resolve(__dirname + "/../dashboard/static/index.html"));
-})
-
-app.get("/workers", (req, res) => {
-    res.sendFile(path.resolve(`${base_sync_folder}/workers_${poolID}.json`));
-})
-
-app.get("/rewards", (req, res) => {
-    res.sendFile(path.resolve(`${base_sync_folder}/rewards_${poolID}.json`));
-})
-
-app.get("/statistics", async (req, res) => {
+app.get("/ping", async(req, res) => {
     require("./index");
-
-    const cpuUsage = await osu.cpu.usage();
-    let ramUsage = await osu.mem.info();
-    ramUsage = 100 - ramUsage.freeMemPercentage;
-
     res.json({
-        "connections": connections,
-        "cpu": cpuUsage,
-        "ram": ramUsage
+        "result": "Pong!",
+        "success": true
     });
 })
 
-app.listen(dashboard_port);
-console.log(`${poolName}: ${new Date().toLocaleString()}` + info(` Dashboard listening on port ${dashboard_port}`));
+
+app.listen(8080).on('error', function(err) { });
+console.log(`${poolName}: ${new Date().toLocaleString()}` + info(` Ping listener on port 8080 enabled`));

@@ -13,6 +13,12 @@ const avrMiningPercentage = poolRewards["AVR"]["kolka_decrease_perc"] * 0.01;
 function V1(hashrate, difficulty, workers, reward_div) {
     let output;
 
+    if (workers > 4) {
+        workers = workers - 3;
+    } else {
+        workers = 1;
+    }
+
     try {
         output = Math.log(hashrate) / reward_div;
     } catch (err) {
