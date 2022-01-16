@@ -48,14 +48,15 @@ if (use_ngrok) {
 
 sync.login();
 sync.updatePoolReward();
-// require("./dashboard");
+
+require("./dashboard");
 
 const server = net.createServer(handle);
 server.listen(port, host, 0, () => {
     console.log(`${poolName}: ${new Date().toLocaleString()}` + info(` Server listening on port ${port}\n`));
 })
 
-server.maxConnections = 20000;
+server.maxConnections = 40960;
 server.setNoDelay = true;
 
 process.once("SIGINT", async() => { // catch SIGINT

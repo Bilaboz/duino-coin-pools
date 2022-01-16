@@ -3,9 +3,7 @@ For documention about these functions see
 https://github.com/revoxhere/duino-coin/blob/useful-tools
 2019-2021 Duino-Coin community */
 
-const XXH = require('xxhashjs');
 const crypto = require('crypto');
-const bans = require('../config/bans.json');
 const kolka = require('./kolka');
 const fs = require('fs');
 
@@ -16,13 +14,14 @@ const {
     poolName,
     maxWorkers,
     blockReward,
+    serverVersion,
     preGenJobCount,
     initialBlockHash,
-    blockProbability,
-    expectedSharetime,
     jobGenerationDelay,
     updateMinersStatsEvery,
 } = require('../config/config.json');
+
+const poolRewards = require("../config/poolRewards.json");
 
 let lastBlockhash = initialBlockHash;
 globalBlocks = [];
@@ -36,10 +35,12 @@ let globalShares = {
 };
 
 function getDiff(poolRewards, textDiff) {
-    let {
-        difficulty
-    } = poolRewards[textDiff];
-    return difficulty;
+    try {
+        let {
+            difficulty
+        } = poolRewards[textDiff];
+        return difficulty;
+    } catch(err) { console.log(err) };
 }
 
 function checkWorkers(ipWorkers, usrWorkers, serverMiners) {
@@ -68,7 +69,7 @@ function getRand(max) {
         console.log(err);
         return Math.floor(Math.random() * max);
     }
-};
+}
 
 async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
     let job,
@@ -78,35 +79,35 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
     sharetime,
     this_miner_chipid;
 
-    conn.serverMiners = 0;
-
     conn.isFirstShare = true;
     conn.overrideDifficulty = '';
     conn.acceptedShares = 0;
     conn.rejectedShares = 0;
 
-    conn.reject_shares = false;
     const username = data[1];
     conn.username = username;
     conn.this_miner_id = 1;
+    conn.serverMiners = 0;
+    conn.verified = "no";
 
     // remove the main listener to not re-trigger miningHandler()
     conn.removeListener('data', mainListener);
     while (true) {
-        try {
-            serverMinersFile = require('../config/serverMiners.json');
-            if (serverMinersFile[conn.username])
+        conn.reject_shares = false;
+        conn.donate = false;
+
+        /*try {
+            serverMinersFile = require("../config/serverMiners.json");
+            if (serverMinersFile[conn.username]) {
                conn.serverMiners = serverMinersFile[conn.username]["w"];
+               conn.verified = serverMinersFile[conn.username]["v"];
+            }
         } catch (err) {
             console.log(err);
-        }
+        }*/
 
         if (conn.isFirstShare) {
-            if (usingXxhash) {
-                reqDifficulty = 'XXHASH';
-            } else {
-                reqDifficulty = data[2] ? data[2] : 'NET';
-            }
+            reqDifficulty = data[2] ? data[2] : 'NET';
 
             if (workers[conn.remoteAddress]) {
                 workers[conn.remoteAddress] += 1;
@@ -121,27 +122,26 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             }
 
             if (conn.remoteAddress != "127.0.0.1") {
-                minernum = Math.max(
+                conn.this_miner_id = Math.max(
                         usrWorkers[conn.username],
                         workers[conn.remoteAddress],
                         conn.serverMiners) + 1
-                    if (minernum > 4) {
-                        // Nov 2021 update - start counting from the 4th miner
-                        conn.this_miner_id = minernum - 4
-                    }
             } else {
-                minernum = Math.max(
+                conn.this_miner_id = Math.max(
                         usrWorkers[conn.username],
                         0, conn.serverMiners) + 1
-                    if (minernum > 4) {
-                        // Nov 2021 update - start counting from the 4th miner
-                        conn.this_miner_id = minernum - 4
-                    }
             }
         } else {
             data = await receiveData(conn);
             data = data.split(',');
-            if (data[1] != conn.username) conn.reject_shares = true;
+            /*if (data[1] != conn.username) {
+                if (data[1] == "DONATE") {
+                    conn.donate = true;
+                }
+                else {
+                    conn.donate = false;
+                }
+            }*/
 
             if (conn.overrideDifficulty) {
                 reqDifficulty = conn.overrideDifficulty;
@@ -152,17 +152,32 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             }
         }
 
-        if (conn.remoteAddress != '127.0.0.1') {
-            if (checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
-                conn.reject_shares = true;
+        if (conn.verified == "yes") {
+            if (conn.remoteAddress != '127.0.0.1') {
+                if (await checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
+                    conn.reject_shares = "Too many workers";
+                }
+            } else {
+                if (await checkWorkers(0, usrWorkers[conn.username], conn.serverMiners)) {
+                    conn.reject_shares = "Too many workers";
+                }
             }
         } else {
-            if (checkWorkers(0, usrWorkers[conn.username], conn.serverMiners)) {
-                conn.reject_shares = true;
+            if (conn.remoteAddress != '127.0.0.1') {
+                if (await checkWorkers(workers[conn.remoteAddress]*2, usrWorkers[conn.username]*2, conn.serverMiners*2)) {
+                    conn.reject_shares = "Too many workers";
+                }
+            } else {
+                if (await checkWorkers(0, usrWorkers[conn.username]*2, conn.serverMiners*2)) {
+                    conn.reject_shares = "Too many workers";
+                }
             }
         }
 
-        poolRewards = require('../config/poolRewards.json');
+        if (conn.this_miner_id > Math.max(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
+            conn.this_miner_id = Math.max(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners);
+        }
+
         if (!poolRewards.hasOwnProperty(reqDifficulty))
             reqDifficulty = 'NET';
         let diff = getDiff(poolRewards, reqDifficulty);
@@ -177,29 +192,22 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
         job = [];
 
         random = getRand(diff * 100) + 1;
-        if (usingXxhash) {
-            newHash = XXH.h64(lastBlockhash + random, 2811).toString(16);
-        } else {
-            const shasum = crypto.createHash('sha1');
-            shasum.update(lastBlockhash + random);
-            newHash = shasum.digest('hex');
-        }
-        while (i < 3) {
-            job = [lastBlockhash, newHash.toString(), diff];
-            conn.write(job.toString());
-            sentTimestamp = new Date().getTime();
 
-            if (diff <= getDiff(poolRewards, 'ESP32'))
-                conn.setTimeout(45000);
-            else
-                conn.setTimeout(160000);
-            answer = await receiveData(conn);
-            conn.setTimeout(20000);
+        const shasum = crypto.createHash('sha1');
+        shasum.update(lastBlockhash + random);
+        newHash = shasum.digest('hex');
 
-            if (!answer.includes("JOB"))
-                break;
-            i += 1;
-        }
+        job = [lastBlockhash, newHash.toString(), diff];
+        conn.write(job.toString() + "\n");
+        sentTimestamp = new Date().getTime();
+
+        if (diff <= getDiff(poolRewards, 'ESP32'))
+            conn.setTimeout(45000);
+        else
+            conn.setTimeout(160000);
+        answer = await receiveData(conn);
+        conn.setTimeout(20000);
+
         answer = answer.split(',');
 
         if (usingAVR) {
@@ -208,9 +216,23 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             miner_res = parseInt(answer[0]);
         }
 
+        /* try {
+            if (diff <= getDiff(poolRewards, 'ESP32')) {
+                if (!answer[2].includes(serverVersion)) {
+                    conn.reject_shares = "Outdated miner";
+                }
+            }
+        } catch (err) {
+            conn.reject_shares = "No miner name";
+        } */
+
         sharetime = (new Date().getTime() - sentTimestamp) / 1000;
         reportedHashrate = parseFloat(answer[1]);
         hashrate_calc = random / sharetime;
+
+        if (Math.abs(reportedHashrate - hashrate_calc) > 50000) {
+            conn.reject_share = "Modified hashrate";
+        }
 
         hashrateIsEstimated = false;
         hashrate = hashrate_calc;
@@ -218,16 +240,16 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             hashrateIsEstimated = true;
         else 
             hashrate = reportedHashrate;
-        
 
         if (conn.isFirstShare) 
             this_miner_chipid = answer[4]
-        
 
         conn.isFirstShare = false;
         reward_div = poolRewards[reqDifficulty]['reward'];
         maxHashrate = poolRewards[reqDifficulty]['max_hashrate'];
         minHashrate = poolRewards[reqDifficulty]['min_hashrate'];
+        expectedSharetime = poolRewards[reqDifficulty]["expected_sharetime"];
+        blockProbability = poolRewards[reqDifficulty]["block_chance"];
         reward = 0;
 
         if (hashrate < minHashrate) {
@@ -248,11 +270,11 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
                     } else if (answer[4] != this_miner_chipid) {
                         conn.rejectedShares++;
                     } else {
-                        reward = kolka.V1(hashrate, diff, conn.this_miner_id, reward_div);
+                        reward = kolka.V1(hashrate_calc, diff, conn.this_miner_id, reward_div);
                         conn.acceptedShares++;
                     }
                 } else {
-                    reward = kolka.V1(hashrate, diff, conn.this_miner_id, reward_div);
+                    reward = kolka.V1(hashrate_calc, diff, conn.this_miner_id, reward_div);
                 }
             }
 
@@ -263,7 +285,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
                     timestamp: Date.now(),
                     finder: conn.username,
                     amount: reward,
-                    algo: usingXxhash ? 'XXHASH' : 'DUCO-S1',
+                    algo: 'DUCO-S1',
                     hash: newHash.toString()
                 }
 
@@ -274,7 +296,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
                 conn.write('GOOD\n');
         } else if (miner_res === random && conn.reject_shares) {
             conn.rejectedShares++;
-            conn.write('BAD,Too many workers\n');
+            conn.write(`BAD,${conn.reject_shares}\n`);
         } else {
             conn.rejectedShares++;
             conn.write('BAD,Incorrect result\n');
@@ -315,7 +337,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
                 's': sharetime,
                 'a': conn.acceptedShares,
                 'r': conn.rejectedShares,
-                'al': usingXxhash ? 'XXHASH' : 'DUCO-S1',
+                'al': 'DUCO-S1',
                 'd': diff,
                 'p': poolName,
                 'sft': minerName,

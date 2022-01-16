@@ -12,6 +12,8 @@ const error = chalk.bold.red;
 const info = chalk.blue;
 const success = chalk.green;
 const warning = chalk.hex('#FFA500');
+const importFresh = require('import-fresh');
+let bans = require('../config/bans.json');
 const {
     exec
 } = require("child_process");
@@ -21,7 +23,6 @@ const {
     serverVersion,
     poolName
 } = require('../config/config.json');
-let bans = require('../config/bans.json');
 
 function getHttpCode() {
     http_codes = [
@@ -46,14 +47,13 @@ function getHttpCode() {
 }
 
 function ban_ip(ip) {
-    // Should be edited according to your setup
     exec(`csf -td ${ip}`, (error, stdout, stderr) => {
         if (error) {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Error banning ${ip}: ${stderr}`))
+            // console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Error banning ${ip}: ${stderr}`))
             return;
         }
         if (stderr) {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Stderror banning ${ip}: ${stderr}`))
+            // console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Stderror banning ${ip}: ${stderr}`))
             return;
         }
         console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Banned ${ip}`))
@@ -126,7 +126,7 @@ const handle = (conn) => {
             if (conn.remoteAddress != "127.0.0.1")
                 bans.bannedIPs.push(conn.remoteAddress);
             try {
-                fs.writeFileSync('../config/bans.json', JSON.stringify(bans, null, 0));
+                fs.writeFileSync('./config/bans.json', JSON.stringify(bans, null, 0));
             } catch (err) {
                 console.log(err);
             }
