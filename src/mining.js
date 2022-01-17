@@ -72,7 +72,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
     const username = data[1];
     conn.username = username;
     conn.this_miner_id = 1;
-    conn.serverMiners = 0;
     conn.verified = "no";
 
     // remove the main listener to not re-trigger miningHandler()
@@ -80,16 +79,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
     while (true) {
         conn.reject_shares = false;
         conn.donate = false;
-
-        /*try {
-            serverMinersFile = require("../config/serverMiners.json");
-            if (serverMinersFile[conn.username]) {
-               conn.serverMiners = serverMinersFile[conn.username]["w"];
-               conn.verified = serverMinersFile[conn.username]["v"];
-            }
-        } catch (err) {
-            console.log(err);
-        }*/
 
         if (conn.isFirstShare) {
             reqDifficulty = data[2] ? data[2] : 'NET';
@@ -172,8 +161,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
             diff = kolka.V3(sharetime, expectedSharetime, diff);
         }
 
-        let sentTimestamp = 0;
-
         random = getRand(diff * 100) + 1;
 
         const shasum = crypto.createHash('sha1');
@@ -182,7 +169,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
 
         let job = [lastBlockhash, newHash.toString(), diff];
         conn.write(job.toString() + "\n");
-        sentTimestamp = new Date().getTime();
+        let sentTimestamp = new Date().getTime();
 
         if (diff <= getDiff(poolRewards, 'ESP32'))
             conn.setTimeout(45000);

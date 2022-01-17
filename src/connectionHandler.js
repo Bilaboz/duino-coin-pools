@@ -9,7 +9,7 @@ const log = require("./logging");
 const mining = require('./mining');
 const { exec } = require("child_process");
 const bans = require('../config/bans.json');
-const { motd, serverVersion, poolName } = require('../config/config.json');
+const { motd, serverVersion } = require('../config/config.json');
 
 const getHttpCode = () => {
     http_codes = [
