@@ -71,6 +71,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
 
     const username = data[1];
     conn.username = username;
+    conn.serverMiners = 0
     conn.this_miner_id = 1;
     conn.verified = "no";
 
