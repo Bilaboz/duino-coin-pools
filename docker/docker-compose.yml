@@ -1,0 +1,16 @@
+version: "3.5"
+
+services:
+    software:
+        build:
+            context: .
+            dockerfile: duino-coin-pools.Docker
+        image: duino-coin-pools
+        hostname: duino-coin-pools
+        container_name: duino-coin-pools
+        volumes:
+            - ./../.:/var/www/duino-coin-pools
+        environment:
+            ENVIRONMENT_NAME: duino-coin-pools
+        command: /bin/bash /var/www/duino-coin-pools/docker/install_system.sh
+        network_mode: host

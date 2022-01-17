@@ -1,0 +1,20 @@
+# This container is based on a the latest version of ubuntu
+FROM ubuntu:20.04
+
+# Update and clean
+RUN apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autoclean
+
+# Install required software -> system
+RUN apt-get install -y apt-utils
+
+# Timezone must be set! Otherwise, the deployment may not work as expected!
+RUN apt-get install -y tzdata
+ENV TZ=Europe/Berlin
+RUN echo $TZ | tee /etc/timezone
+RUN dpkg-reconfigure --frontend noninteractive tzdata
+
+# Create specific directories for this container
+RUN mkdir -p /var/www
+RUN mkdir -p /var/www/duino-coin-pools
+
+
