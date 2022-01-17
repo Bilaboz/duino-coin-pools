@@ -4,27 +4,15 @@ https://github.com/revoxhere/duino-coin/blob/useful-tools
 2019-2021 Duino-Coin community */
 
 const fs = require('fs');
-const axios = require('axios');
-const mining = require('./mining');
-const crypto = require('crypto');
 const chalk = require('chalk');
-const error = chalk.bold.red;
-const info = chalk.blue;
-const success = chalk.green;
+const crypto = require('crypto');
+const mining = require('./mining');
 const warning = chalk.hex('#FFA500');
-const importFresh = require('import-fresh');
-let bans = require('../config/bans.json');
-const {
-    exec
-} = require("child_process");
-const {
-    maxWorkers,
-    motd,
-    serverVersion,
-    poolName
-} = require('../config/config.json');
+const { exec } = require("child_process");
+const bans = require('../config/bans.json');
+const { motd, serverVersion, poolName } = require('../config/config.json');
 
-function getHttpCode() {
+const getHttpCode = () => {
     http_codes = [
         "201 Created",
         "203 Non-Authoritative Information",
@@ -46,22 +34,18 @@ function getHttpCode() {
     return http_codes[Math.floor(Math.random() * http_codes.length)];
 }
 
-function ban_ip(ip) {
-    exec(`csf -td ${ip}`, (error, stdout, stderr) => {
+const ban_ip = (ip) => {
+    exec(`csf -td ${ip}`, (error) => {
         if (error) {
-            // console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Error banning ${ip}: ${stderr}`))
+            console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Error banning ${ip}: ${error}`));
             return;
+        } else {
+            console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Banned ${ip}`));
         }
-        if (stderr) {
-            // console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Stderror banning ${ip}: ${stderr}`))
-            return;
-        }
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Banned ${ip}`))
     });
 }
 
 const handle = (conn) => {
-    conn.username = undefined;
     conn.id = crypto.randomBytes(4).toString('hex');
     try {
         conn.setTimeout(20000);
@@ -92,39 +76,33 @@ const handle = (conn) => {
         if (err.code !== 'ECONNRESET') {}
     })
 
-    conn.on('timeout', (err) => {
+    conn.on('timeout', () => {
         conn.destroy();
     })
 
     conn.on('data', function mainListener(data) {
         data = data.trim().split(',');
 
-        if (data.length > 6) {
-            setTimeout(function () {
+        if (!conn.remoteAddress || data.length > 6) {
+            setTimeout(() => {
                 conn.write(getHttpCode());
                 return conn.destroy();
-            }, 10000)
+            }, 10000);
         }
 
-        if (!conn.remoteAddress) {
-            setTimeout(function () {
-                conn.write(getHttpCode());
-                return conn.destroy();
-            }, 10000)
-        }
-
+        /* IP ban check */
         if (bans.bannedIPs.includes(conn.remoteAddress) && conn.remoteAddress != "127.0.0.1") {
             ban_ip(conn.remoteAddress);
 
-            setTimeout(function () {
+            setTimeout(() => {
                 conn.write(getHttpCode());
                 return conn.destroy();
             }, 10000)
         }
 
+        /* Username ban check */
         if (bans.bannedUsernames.includes(data[1]) && conn.remoteAddress != "127.0.0.1") {
-            if (conn.remoteAddress != "127.0.0.1")
-                bans.bannedIPs.push(conn.remoteAddress);
+            bans.bannedIPs.push(conn.remoteAddress);
             try {
                 fs.writeFileSync('./config/bans.json', JSON.stringify(bans, null, 0));
             } catch (err) {
@@ -132,7 +110,7 @@ const handle = (conn) => {
             }
             ban_ip(conn.remoteAddress);
 
-            setTimeout(function () {
+            setTimeout(() => {
                 conn.write(getHttpCode());
                 return conn.destroy();
             }, 10000)
