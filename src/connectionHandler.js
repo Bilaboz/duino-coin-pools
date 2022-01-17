@@ -4,10 +4,9 @@ https://github.com/revoxhere/duino-coin/blob/useful-tools
 2019-2021 Duino-Coin community */
 
 const fs = require('fs');
-const chalk = require('chalk');
 const crypto = require('crypto');
+const log = require("./logging");
 const mining = require('./mining');
-const warning = chalk.hex('#FFA500');
 const { exec } = require("child_process");
 const bans = require('../config/bans.json');
 const { motd, serverVersion, poolName } = require('../config/config.json');
@@ -37,10 +36,10 @@ const getHttpCode = () => {
 const ban_ip = (ip) => {
     exec(`csf -td ${ip}`, (error) => {
         if (error) {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Error banning ${ip}: ${error}`));
+            log.warning(`Error banning ${ip}: ${error}`);
             return;
         } else {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Banned ${ip}`));
+            log.warning(`Banned ${ip}`);
         }
     });
 }

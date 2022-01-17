@@ -6,20 +6,10 @@ https://github.com/revoxhere/duino-coin/blob/useful-tools
 const net = require("net");
 const handle = require("./connectionHandler");
 const sync = require('./sync');
-const mining = require("./mining");
-const {
-    spawn
-} = require("child_process");
-
-const chalk = require('chalk');
-const error = chalk.bold.red;
-const info = chalk.blue;
-const success = chalk.green;
-const warning = chalk.hex('#FFA500');
-
+const { spawn } = require("child_process");
+const log = require("./logging");
 const {
     use_ngrok,
-    poolID,
     poolName,
     port,
     host
@@ -30,18 +20,18 @@ connections = 0;
 if (use_ngrok) {
     ngrok = spawn(`./ngrok`, [`tcp`, `-region`, `eu`, `${port}`]);
 
-    ngrok.stderr.on("data", data => {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Ngrok stderr: ${data}`));
+    ngrok.stderr.on("data", (data) => {
+        log.error(`Ngrok stderr: ${data}`);
         process.exit(-1);
     });
 
     ngrok.on('error', (err) => {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Ngrok error: ${err}`));
+        log.error(`Ngrok error: ${err}`);
         process.exit(-1);
     });
 
-    ngrok.on("close", code => {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Ngrok exited (code ${code})`));
+    ngrok.on("close", (code) => {
+        log.error(`Ngrok exited (code ${code})`);
         process.exit(-1);
     });
 }
@@ -53,22 +43,22 @@ require("./dashboard");
 
 const server = net.createServer(handle);
 server.listen(port, host, 0, () => {
-    console.log(`${poolName}: ${new Date().toLocaleString()}` + info(` Server listening on port ${port}\n`));
+    log.info(`Server listening on port ${port}\n`);
 })
 
 server.maxConnections = 40960;
 server.setNoDelay = true;
 
-process.once("SIGINT", async() => { // catch SIGINT
-    console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` SIGINT detected, closing the server and logging out the pool...`));
-    await sync.logout(); // log out the pool from the server, so it doesn't appear online
+process.once("SIGINT", async () => {
+    log.warning("SIGINT detected, closing the server and logging out the pool...");
+    await sync.logout();
     server.close();
     process.exit(0);
 })
 
-process.once("SIGTERM", async() => { // catch SIGTERM
-    console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` SIGTERM detected, closing the server and logging out the pool...`));
-    await sync.logout(); // log out the pool from the server, so it doesn't appear online
+process.once("SIGTERM", async () => {
+    log.warning("SIGTERM detected, closing the server and logging out the pool...");
+    await sync.logout();
     server.close();
     process.exit(0);
 })
@@ -77,7 +67,7 @@ setInterval(() => {
     server.getConnections((error, count) => {
         if (!error) {
             connections = count;
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + info(` Connected clients: ${count}`));
+            log.info(`Connected clients: ${count}`);
         }
     });
 }, 10000);

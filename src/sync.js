@@ -8,21 +8,9 @@ const axios = require("axios");
 const fs = require("fs");
 const osu = require("node-os-utils");
 
-let mining = require("./mining");
-
-// loads initial values to these dicts
-let poolRewards = {}
-let serverMiners = {}
-
-const FormData = require('form-data');
 const dns = require('dns');
-
-const chalk = require('chalk');
-const error = chalk.bold.red;
-const info = chalk.blue;
-const success = chalk.green;
-const warning = chalk.hex('#FFA500');
-
+const log = require("./logging");
+const FormData = require('form-data');
 const {
     poolID,
     poolVersion,
@@ -35,17 +23,21 @@ const {
     timeout,
     use_ngrok
 } = require("../config/config.json");
-let ip, port, sync_count = 0;
+
 const SYNC_TIME = syncTime * 1000;
 const TIMEOUT = timeout * 1000;
 
-function wait(milliseconds) {
+let ip, port, sync_count = 0;
+let poolRewards = {};
+let serverMiners = {};
+
+const wait = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
-async function dns_lookup(ip) {
+const dns_lookup = async (ip) => {
     return new Promise((resolve, reject) => {
-        dns.lookup(ip, (err, address, family) => {
+        dns.lookup(ip, (err, address) => {
             if (err)
                 reject(err);
             resolve(address);
@@ -53,7 +45,7 @@ async function dns_lookup(ip) {
     });
 };
 
-async function get_ngrok_ip() {
+const get_ngrok_ip = async () => {
     while (true) {
         try {
             let res = await axios.get(
@@ -65,16 +57,16 @@ async function get_ngrok_ip() {
             ip = await dns_lookup(content[1].replace("//", ""));
             port = content[2];
 
-            console.log(`${poolName}: ${new Date().toLocaleString()} ` + info(`Fetched ngrok IP: ${ip}:${port}`));
+            log.info(`Fetched ngrok IP: ${ip}:${port}`);
             break;
         } catch (err) {
-            console.log(`${poolName}: ${new Date().toLocaleString()} ` + error(`Can't fetch ngrok IP: ${err}`));
+           log.error(`Can't fetch ngrok IP: ${err}`);
         }
         await wait(3000);
     }
 }
 
-async function get_pool_ip() {
+const get_pool_ip = async () => {
     while (true) {
         try {
             let res = await axios.get(
@@ -85,16 +77,16 @@ async function get_pool_ip() {
             ip = res.data;
             port = require("../config/config.json").port;
 
-            console.log(`${poolName}: ${new Date().toLocaleString()} ` + info(`Fetched pool IP: ${ip}:${port}`));
+            log.info(`Fetched pool IP: ${ip}:${port}`);
             break;
         } catch (err) {
-            console.log(`${poolName}: ${new Date().toLocaleString()} ` + error(`Can't fetch pool IP: ${err}`));
+            log.error(`Can't fetch pool IP: ${err}`);
         }
         await wait(3000);
     }
 }
 
-async function login() {
+const login = async () => {
     if (use_ngrok)
         await get_ngrok_ip();
     else
@@ -114,34 +106,34 @@ async function login() {
         socket.setTimeout(TIMEOUT);
         socket.connect(serverPort, serverIP);
     } catch (err) {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Socket error at connect: ${err}`));
+        log.error(`Socket error at connect: ${err}`);
     }
 
     socket.on("error", (err) => {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Socket error at login: ${err}`));
+        log.error(`Socket error at login: ${err}`);
     });
 
     socket.on("timeout", () => {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Socket timeout at login`));
+        log.error("Socket timeout at login");
     });
 
     socket.on("data", (data) => {
         if (data.startsWith("2")) {
             socket.write(`PoolLogin,${JSON.stringify(loginInfos)}`);
         } else if (data === "LoginOK") {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Successfully logged in`));
+            log.success("Successfully logged in");
             socket.destroy();
         } else {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Unknown error, server returned ${data} in login`));
+            log.warning(`Unknown error, server returned ${data} in login`);
             process.exit(-1)
         }
-    })
+    });
 
     sync();
     updateMinerCount();
 }
 
-function logout() {
+const logout = () => {
     return new Promise((resolve, reject) => {
         const socket = new net.Socket();
         try {
@@ -149,16 +141,16 @@ function logout() {
             socket.setTimeout(TIMEOUT);
             socket.connect(serverPort, serverIP);
         } catch (err) {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Socket error at connect: ${err}`));
+            log.error(`Socket error at connect: ${err}`);
         }
 
         socket.on("error", (err) => {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Socket error at logout: ${err}`));
+            log.error(`Socket error at logout: ${err}`);
             reject(1);
         });
 
         socket.on("timeout", () => {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Socket timeout at logout`));
+            log.error(`Socket timeout at logout`);
             reject(1);
         });
 
@@ -166,26 +158,28 @@ function logout() {
             if (data.startsWith("2")) {
                 socket.write(`PoolLogout,${poolID}`);
             } else if (data === "LogoutOK") {
-                console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Successfully logged out`));
+                log.success("Successfully logged out");
                 resolve();
             } else {
-                console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Unknown error, server returned ${data} in logout`));
+                log.warning(`Unknown error, server returned ${data} in logout`);
                 reject(data);
             }
-        })
-    })
+        });
+    });
 }
 
-async function sync() {
-    const cpuUsage = await osu.cpu.usage();
+const sync = async () => {
     const mining = require("./mining");
     const blockIncrease = mining.stats.globalShares.increase;
     require("./index");
-    if (use_ngrok && sync_count > 0 && sync_count % 50 == 0)
-        await get_ngrok_ip();
 
+    if (use_ngrok && sync_count > 0 && sync_count % 50 == 0)
+    await get_ngrok_ip();
+    
+    const cpuUsage = await osu.cpu.usage();
     let ramUsage = await osu.mem.info();
     ramUsage = 100 - ramUsage.freeMemPercentage;
+
     mining.stats.globalShares.increase = 0;
     const syncData = {
         blocks: {
@@ -201,7 +195,7 @@ async function sync() {
     fs.writeFileSync(`${base_sync_folder}/rewards_${poolName}.json`, JSON.stringify(mining.stats.balancesToUpdate, null, 0));
     // fs.writeFileSync(`${base_sync_folder}/statistics_${poolName}.json`, JSON.stringify(syncData, null, 0));
 
-    let request_url = `https://${serverIP}/pool_sync/`
+    const request_url = `https://${serverIP}/pool_sync/`
          + `?host=${ip}&port=${port}&version=${poolVersion}`
          + `&identifier=${poolID}&name=${poolName}`
          + `&blockIncrease=${blockIncrease}&bigBlocks=${globalBlocks}`
@@ -213,7 +207,7 @@ async function sync() {
     // form.append('statistics', fs.readFileSync(`${base_sync_folder}/statistics_${poolName}.json`), `rewards_${poolName}.json`);
 
     try {
-        sync_count += 1;
+        sync_count++;
         axios.post(request_url, form, {
             headers: {
                 ...form.getHeaders(),
@@ -221,78 +215,65 @@ async function sync() {
             }
         })
         .then(response => {
-            if (response) {
-                if (response.data.success) {
-                    Object.keys(mining.stats.balancesToUpdate).forEach(k => {
-                        delete mining.stats.balancesToUpdate[k];
-                    });
-                    globalBlocks = [];
-                    console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Successfull sync #${sync_count}`));
-                } else {
-                    console.log(`${poolName}: ${new Date().toLocaleString()}` + warning(` Server error at sync #${sync_count}: ${response.data.message}`));
-                }
+            if (response && response.data.success) {
+                Object.keys(mining.stats.balancesToUpdate).forEach(k => {
+                    delete mining.stats.balancesToUpdate[k];
+                });
+                globalBlocks = [];
+                log.success(`Successfull sync #${sync_count}`);
+            } else {
+                log.warning(`Server error at sync #${sync_count}: ${response.data.message}`);
             }
         })
-        .catch(function (err) {
-            console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Socket error while syncing: ${err}`));
-        })
+        .catch((err) => {
+            log.error(`Socket error while syncing: ${err}`);
+        });
     } catch (err) {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Error while syncing: ${err}`));
+        log.error(`Error while syncing: ${err}`);
     }
 
     setTimeout(sync, SYNC_TIME);
 }
 
-function updatePoolReward() {
+const updatePoolReward = () => {
     axios.get(`${server_sync_url}/poolrewards.json`, {
         timeout: SYNC_TIME
     })
     .then(response => {
         poolRewards = response.data;
         fs.writeFileSync('./config/poolRewards.json', JSON.stringify(poolRewards, null, 2));
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Updated pool rewards file`));
+        log.success("Updated pool rewards file");
     })
-    .catch(function (err) {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Error updating pool rewards file: ${err}`));
+    .catch((err) => {
+        log.error(`Error updating pool rewards file: ${err}`);
     });
-    //delete require.cache['./config/poolRewards.json'];
-    //delete require.cache[require.resolve('../config/poolRewards.json')];
-    //console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Deleted poolRewards cache`));
 
-    bans = JSON.parse(fs.readFileSync('./config/bans.json', 'utf8'));
+    let bans = JSON.parse(fs.readFileSync('./config/bans.json', 'utf8'));
     axios.get(`${server_sync_url}/bans.json`, {
         timeout: TIMEOUT
     })
     .then(response => {
         bans.bannedUsernames = response.data;
         fs.writeFileSync('./config/bans.json', JSON.stringify(bans, null, 2));
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Updated bans file`));
+        log.success("Updated bans file");
     })
-    .catch(function (err) {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Error updating bans file: ${err}`));
+    .catch((err) => {
+        log.error(`Error updating bans file: ${err}`);
     });
-    //delete require.cache['./config/bans.json'];
-    //delete require.cache[require.resolve('../config/bans.json')];
-    //console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Deleted bans cache`));
-
-    //setTimeout(updatePoolReward, SYNC_TIME);
 }
 
-function updateMinerCount() {
+const updateMinerCount = () => {
     axios.get('https://server.duinocoin.com/statistics_miners', {
         timeout: TIMEOUT
     })
     .then(response => {
         serverMiners = response.data.result;
         fs.writeFileSync('./config/serverMiners.json', JSON.stringify(response.data.result, null, 2));
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Updated miner count file`));
+        log.success("Updated miner count file");
     })
-    .catch(function (err) {
-        console.log(`${poolName}: ${new Date().toLocaleString()}` + error(` Error updating miner count file: ${err}`));
+    .catch((err) => {
+        log.error(`Error updating miner count file: ${err}`);
     });
-    //delete require.cache['./config/serverMiners.json'];
-    //delete require.cache[require.resolve('../config/serverMiners.json')];
-    //console.log(`${poolName}: ${new Date().toLocaleString()}` + success(` Deleted serverMiners cache`));
 
     //setTimeout(updateMinerCount, SYNC_TIME);
 }

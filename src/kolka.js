@@ -5,7 +5,6 @@ https://github.com/revoxhere/duino-coin/blob/useful-tools
 
 const poolRewards = require("../config/poolRewards.json");
 const highestPCdiff = 150000;
-const highestAVRdiff = 1500;
 const pcMiningPercentage = poolRewards["NET"]["kolka_decrease_perc"] * 0.01;
 const espMiningPercentage = poolRewards["ESP32"]["kolka_decrease_perc"] * 0.01;
 const avrMiningPercentage = poolRewards["AVR"]["kolka_decrease_perc"] * 0.01;

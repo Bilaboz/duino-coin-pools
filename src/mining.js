@@ -5,22 +5,14 @@ https://github.com/revoxhere/duino-coin/blob/useful-tools
 
 const crypto = require('crypto');
 const kolka = require('./kolka');
-const fs = require('fs');
-
-const chalk = require('chalk');
-const info = chalk.blue;
-
+const log = require("./logging");
 const {
     poolName,
     maxWorkers,
     blockReward,
-    serverVersion,
-    preGenJobCount,
     initialBlockHash,
-    jobGenerationDelay,
     updateMinersStatsEvery,
 } = require('../config/config.json');
-
 const poolRewards = require("../config/poolRewards.json");
 
 let lastBlockhash = initialBlockHash;
@@ -34,16 +26,14 @@ let globalShares = {
     total: 0
 };
 
-function getDiff(poolRewards, textDiff) {
+const getDiff = (poolRewards, textDiff) => {
     try {
-        let {
-            difficulty
-        } = poolRewards[textDiff];
+        let { difficulty } = poolRewards[textDiff];
         return difficulty;
     } catch(err) { console.log(err) };
 }
 
-function checkWorkers(ipWorkers, usrWorkers, serverMiners) {
+const checkWorkers = (ipWorkers, usrWorkers, serverMiners) => {
     if (maxWorkers <= 0)
         return false;
 
@@ -53,7 +43,7 @@ function checkWorkers(ipWorkers, usrWorkers, serverMiners) {
     return false;
 }
 
-function receiveData(conn) {
+const receiveData = (conn) => {
     return new Promise((resolve) => {
         conn.on('data', function listener(data) {
             conn.removeListener('data', listener);
@@ -62,7 +52,7 @@ function receiveData(conn) {
     })
 }
 
-function getRand(max) {
+const getRand = (max) => {
     try {
         return crypto.randomInt(max);
     } catch (err) {
@@ -71,16 +61,11 @@ function getRand(max) {
     }
 }
 
-async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
-    let job,
-    random,
-    newHash,
-    reqDifficulty,
-    sharetime,
-    this_miner_chipid;
+const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) => {
+    let random, newHash, reqDifficulty;
+    let sharetime, this_miner_chipid;
 
     conn.isFirstShare = true;
-    conn.overrideDifficulty = '';
     conn.acceptedShares = 0;
     conn.rejectedShares = 0;
 
@@ -164,11 +149,11 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             }
         } else {
             if (conn.remoteAddress != '127.0.0.1') {
-                if (await checkWorkers(workers[conn.remoteAddress]*2, usrWorkers[conn.username]*2, conn.serverMiners*2)) {
+                if (await checkWorkers(workers[conn.remoteAddress] * 2, usrWorkers[conn.username] * 2, conn.serverMiners * 2)) {
                     conn.reject_shares = "Too many workers";
                 }
             } else {
-                if (await checkWorkers(0, usrWorkers[conn.username]*2, conn.serverMiners*2)) {
+                if (await checkWorkers(0, usrWorkers[conn.username] * 2, conn.serverMiners * 2)) {
                     conn.reject_shares = "Too many workers";
                 }
             }
@@ -180,16 +165,14 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
 
         if (!poolRewards.hasOwnProperty(reqDifficulty))
             reqDifficulty = 'NET';
+
         let diff = getDiff(poolRewards, reqDifficulty);
 
         if (!conn.isFirstShare && (diff > getDiff(poolRewards, 'ESP32'))) {
             diff = kolka.V3(sharetime, expectedSharetime, diff);
         }
 
-        let sentTimestamp = 0,
-        answer = "",
-        i = 0,
-        job = [];
+        let sentTimestamp = 0;
 
         random = getRand(diff * 100) + 1;
 
@@ -197,7 +180,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
         shasum.update(lastBlockhash + random);
         newHash = shasum.digest('hex');
 
-        job = [lastBlockhash, newHash.toString(), diff];
+        let job = [lastBlockhash, newHash.toString(), diff];
         conn.write(job.toString() + "\n");
         sentTimestamp = new Date().getTime();
 
@@ -205,9 +188,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             conn.setTimeout(45000);
         else
             conn.setTimeout(160000);
-        answer = await receiveData(conn);
-        conn.setTimeout(20000);
-
+        let answer = await receiveData(conn);
         answer = answer.split(',');
 
         if (usingAVR) {
@@ -215,16 +196,6 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
         } else {
             miner_res = parseInt(answer[0]);
         }
-
-        /* try {
-            if (diff <= getDiff(poolRewards, 'ESP32')) {
-                if (!answer[2].includes(serverVersion)) {
-                    conn.reject_shares = "Outdated miner";
-                }
-            }
-        } catch (err) {
-            conn.reject_shares = "No miner name";
-        } */
 
         sharetime = (new Date().getTime() - sentTimestamp) / 1000;
         reportedHashrate = parseFloat(answer[1]);
@@ -290,7 +261,7 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
                 }
 
                 globalBlocks.push(blockInfos);
-                console.log(`${poolName}: ${new Date().toLocaleString()}` + info(` Block found by ${conn.username}`))
+                log.info(`Block found by ${conn.username}`);
                 conn.write('BLOCK\n');
             } else
                 conn.write('GOOD\n');
@@ -302,29 +273,27 @@ async function miningHandler(conn, data, mainListener, usingXxhash, usingAVR) {
             conn.write('BAD,Incorrect result\n');
         }
 
-        if (conn.acceptedShares > 0 &&
-            conn.acceptedShares % updateMinersStatsEvery === 0) {
+        if (conn.acceptedShares > 0 && conn.acceptedShares % updateMinersStatsEvery === 0) {
             if (balancesToUpdate[conn.username])
                 balancesToUpdate[conn.username] += reward;
             else
                 balancesToUpdate[conn.username] = reward;
 
-            let minerName = "",
-            rigIdentifier = "",
-            wallet_id = null;
-
+            let minerName;
             try {
                 minerName = answer[2].match(/[A-Za-z0-9 .()-]+/g).join(' ');
             } catch (err) {
                 miner_name = 'Unknown miner';
             }
 
+            let wallet_id;
             try {
                 wallet_id = parseInt(answer[5]);
             } catch (err) {
                 wallet_id = "None";
             }
 
+            let rigIdentifier;
             try {
                 rigIdentifier = answer[3].match(/[A-Za-z0-9 .()-]+/g).join(' ');
             } catch (err) {
