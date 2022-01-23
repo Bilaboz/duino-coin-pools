@@ -34,7 +34,12 @@ const getHttpCode = () => {
 }
 
 const ban_ip = (ip) => {
-    exec(`csf -td ${ip}`, (error) => {
+    // uncomment the correct command for your firewall
+    const cmd = `csf -td ${ip}`; //csf
+    //const cmd = `iptables -A INPUT -s ${ip} -j DROP`; //iptables
+    //const cmd = `sudo ufw deny from ${ip} to any`; //ufw
+
+    exec(cmd, (error) => {
         if (error) {
             log.warning(`Error banning ${ip}: ${error}`);
             return;
