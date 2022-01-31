@@ -35,8 +35,8 @@ const getHttpCode = () => {
 
 const ban_ip = (ip) => {
     // uncomment the correct command for your firewall
-    const cmd = `csf -td ${ip}`; //csf
-    //const cmd = `iptables -A INPUT -s ${ip} -j DROP`; //iptables
+    //const cmd = `sudo csf -td ${ip}`; //csf
+    const cmd = `sudo iptables -A INPUT -s ${ip} -j DROP`; //iptables
     //const cmd = `sudo ufw deny from ${ip} to any`; //ufw
 
     exec(cmd, (error) => {
@@ -52,9 +52,8 @@ const ban_ip = (ip) => {
 const handle = (conn) => {
     conn.id = crypto.randomBytes(4).toString('hex');
     try {
-        conn.setTimeout(20000);
-        conn.setNoDelay(true);
-        conn.setEncoding('utf8');
+        conn.setTimeout(10 * 1000);
+        conn.setEncoding('ascii');
         conn.write(serverVersion);
     } catch (err) {
         return conn.destroy();
@@ -88,20 +87,22 @@ const handle = (conn) => {
         data = data.trim().split(',');
 
         if (!conn.remoteAddress || data.length > 6) {
+            conn.setTimeout(60 * 1000);
             setTimeout(() => {
                 conn.write(getHttpCode());
                 return conn.destroy();
-            }, 10000);
+            }, 59 * 1000)
         }
 
         /* IP ban check */
         if (bans.bannedIPs.includes(conn.remoteAddress) && conn.remoteAddress != "127.0.0.1") {
             ban_ip(conn.remoteAddress);
 
+            conn.setTimeout(60 * 1000);
             setTimeout(() => {
                 conn.write(getHttpCode());
                 return conn.destroy();
-            }, 10000)
+            }, 59 * 1000)
         }
 
         /* Username ban check */
@@ -114,10 +115,11 @@ const handle = (conn) => {
             }
             ban_ip(conn.remoteAddress);
 
+            conn.setTimeout(60 * 1000);
             setTimeout(() => {
                 conn.write(getHttpCode());
                 return conn.destroy();
-            }, 10000)
+            }, 59 * 1000)
         }
 
         if (data[0] === 'JOB') {
@@ -134,20 +136,8 @@ const handle = (conn) => {
                 mining.miningHandler(conn, data, mainListener, false, false);
             }
 
-        } else if (data[0] === 'JOBXX') {
-            conn.write('BAD,XXHASH is disabled');
-            return conn.destroy();
-
-            if (!data[1]) {
-                conn.write('BAD,No username specified\n');
-                return conn.destroy();
-            }
-            mining.miningHandler(conn, data, mainListener, true, false);
-
         } else if (data[0] === 'MOTD') {
-            let finalMOTD = motd;
-            //finalMOTD += `\nPool worker limit: ${maxWorkers}`
-            conn.write(finalMOTD);
+            conn.write(motd);
         }
     })
 }

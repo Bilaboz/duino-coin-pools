@@ -42,12 +42,9 @@ sync.updatePoolReward();
 require("./dashboard");
 
 const server = net.createServer(handle);
-server.listen(port, host, 0, () => {
+server.listen(port, host, 2, () => {
     log.info(`Server listening on port ${port}\n`);
 })
-
-server.maxConnections = 40960;
-server.setNoDelay = true;
 
 process.once("SIGINT", async () => {
     log.warning("SIGINT detected, closing the server and logging out the pool...");

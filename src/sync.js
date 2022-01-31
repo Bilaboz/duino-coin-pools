@@ -130,7 +130,7 @@ const login = async () => {
     });
 
     sync();
-    updateMinerCount();
+    //updateMinerCount();
 }
 
 const logout = () => {
