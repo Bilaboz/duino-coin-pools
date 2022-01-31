@@ -184,7 +184,19 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         } else {
             miner_res = parseInt(answer[0]);
         }
-
+        
+        try {
+            if (diff <= getDiff(poolRewards, 'ESP32')) {
+                const r =  /[+-]?([0-9]*[.])?[0-9]+/;
+                if (parseFloat(answer[2].match(r)[0]) < serverVersion) {
+                    conn.reject_shares = "Outdated miner";
+                    console.log(conn.username, answer[2]);
+                }
+            }
+        } catch (err) {
+            conn.reject_shares = "No miner name";
+        }
+        
         sharetime = (new Date().getTime() - sentTimestamp) / 1000;
         reportedHashrate = parseFloat(answer[1]);
         hashrate_calc = random / sharetime;
