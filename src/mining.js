@@ -12,6 +12,7 @@ const {
     blockReward,
     initialBlockHash,
     updateMinersStatsEvery,
+    serverVersion,
 } = require('../config/config.json');
 const poolRewards = require("../config/poolRewards.json");
 
@@ -63,9 +64,9 @@ const getRand = (max) => {
 
 const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) => {
     let random, newHash, reqDifficulty;
-    let sharetime, this_miner_chipid;
+    let sharetime, this_miner_chipid, minerName;
 
-    conn.isFirstShare = true;
+    let isFirstShare = true;
     conn.acceptedShares = 0;
     conn.rejectedShares = 0;
 
@@ -81,7 +82,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         conn.reject_shares = false;
         conn.donate = false;
 
-        if (conn.isFirstShare) {
+        if (isFirstShare) {
             reqDifficulty = data[2] ? data[2] : 'NET';
 
             if (workers[conn.remoteAddress]) {
@@ -158,7 +159,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
 
         let diff = getDiff(poolRewards, reqDifficulty);
 
-        if (!conn.isFirstShare && (diff > getDiff(poolRewards, 'ESP32'))) {
+        if (!isFirstShare && (diff > getDiff(poolRewards, 'ESP32'))) {
             diff = kolka.V3(sharetime, expectedSharetime, diff);
         }
 
@@ -172,10 +173,19 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         conn.write(job.toString() + "\n");
         let sentTimestamp = new Date().getTime();
 
-        if (diff <= getDiff(poolRewards, 'ESP32'))
-            conn.setTimeout(45000);
-        else
-            conn.setTimeout(160000);
+        if (!isFirstShare) {
+            timeout_calc = (((random * sharetime) / hashrate_calc) + 5) * 1000
+            if (timeout_calc > 300 * 1000) timeout_calc = 300 * 1000;
+
+            conn.setTimeout(timeout_calc);
+        } else {
+            if (diff <= getDiff(poolRewards, 'ESP32')) {
+                conn.setTimeout(15 * 1000);
+            } else {
+                conn.setTimeout(60 * 1000);
+            }
+        }
+
         let answer = await receiveData(conn);
         answer = answer.split(',');
 
@@ -190,10 +200,10 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 const r =  /[+-]?([0-9]*[.])?[0-9]+/;
                 if (parseFloat(answer[2].match(r)[0]) < serverVersion) {
                     conn.reject_shares = "Outdated miner";
-                    console.log(conn.username, answer[2]);
                 }
             }
         } catch (err) {
+            console.log(err)
             conn.reject_shares = "No miner name";
         }
         
@@ -212,10 +222,10 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         else 
             hashrate = reportedHashrate;
 
-        if (conn.isFirstShare) 
+        if (isFirstShare)
             this_miner_chipid = answer[4]
 
-        conn.isFirstShare = false;
+        isFirstShare = false;
         reward_div = poolRewards[reqDifficulty]['reward'];
         maxHashrate = poolRewards[reqDifficulty]['max_hashrate'];
         minHashrate = poolRewards[reqDifficulty]['min_hashrate'];
@@ -279,7 +289,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
             else
                 balancesToUpdate[conn.username] = reward;
 
-            let minerName;
             try {
                 minerName = answer[2].match(/[A-Za-z0-9 .()-]+/g).join(' ');
             } catch (err) {
