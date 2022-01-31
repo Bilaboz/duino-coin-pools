@@ -15,9 +15,8 @@ app.get("/ping", async(req, res) => {
     });
 })
 
-try {
-    app.listen(8080);
-    log.info("Ping listener on port 8080 enabled");
-} catch (err) {
+
+app.listen(8080).on('error', function(err) {
     log.warning(`Ping listener is probably already running (${err})`);
-}
+});
+log.info("Ping listener on port 8080 enabled");
