@@ -52,7 +52,7 @@ const ban_ip = (ip) => {
 const handle = (conn) => {
     conn.id = crypto.randomBytes(4).toString('hex');
     try {
-        conn.setTimeout(10 * 1000);
+        conn.setTimeout(20 * 1000);
         conn.setEncoding('ascii');
         conn.write(serverVersion);
     } catch (err) {
