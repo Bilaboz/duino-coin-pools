@@ -198,7 +198,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         try {
             if (diff <= getDiff(poolRewards, 'ESP32')) {
                 const r =  /[+-]?([0-9]*[.])?[0-9]+/;
-                if (parseFloat(answer[2].match(r)[0]) < serverVersion) {
+                if (parseFloat(answer[2].match(r)[0]) < parseFloat(serverVersion)) {
                     conn.reject_shares = "Outdated miner";
                 }
             }
