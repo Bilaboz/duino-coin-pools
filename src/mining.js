@@ -174,13 +174,13 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         let sentTimestamp = new Date().getTime();
 
         if (!isFirstShare) {
-            timeout_calc = (((random * sharetime) / hashrate_calc) + 5) * 1000
-            if (timeout_calc > 300 * 1000) timeout_calc = 300 * 1000;
+            timeout_calc = (((random * sharetime) / hashrate_calc) + 15) * 1000
+            if (timeout_calc > 360 * 1000) timeout_calc = 360 * 1000;
 
             conn.setTimeout(timeout_calc);
         } else {
             if (diff <= getDiff(poolRewards, 'ESP32')) {
-                conn.setTimeout(15 * 1000);
+                conn.setTimeout(30 * 1000);
             } else {
                 conn.setTimeout(60 * 1000);
             }
