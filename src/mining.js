@@ -203,7 +203,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 }
             }
         } catch (err) {
-            console.log(err)
             conn.reject_shares = "No miner name";
         }
         
