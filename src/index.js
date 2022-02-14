@@ -11,6 +11,7 @@ const log = require("./logging");
 const {
     use_ngrok,
     poolName,
+    poolPassword,
     port,
     host
 } = require("../config/config.json");
@@ -36,8 +37,10 @@ if (use_ngrok) {
     });
 }
 
-sync.login();
-sync.updatePoolReward();
+if (poolName != "" && poolPassword != "") {
+    sync.login();
+    sync.updatePoolReward();
+}
 
 require("./dashboard");
 
@@ -48,14 +51,18 @@ server.listen(port, host, 2, () => {
 
 process.once("SIGINT", async () => {
     log.warning("SIGINT detected, closing the server and logging out the pool...");
-    await sync.logout();
+    if (poolName != "" && poolPassword != "") {
+        await sync.logout();
+    }
     server.close();
     process.exit(0);
 })
 
 process.once("SIGTERM", async () => {
     log.warning("SIGTERM detected, closing the server and logging out the pool...");
-    await sync.logout();
+    if (poolName != "" && poolPassword != "") {
+        await sync.logout();
+    }
     server.close();
     process.exit(0);
 })
