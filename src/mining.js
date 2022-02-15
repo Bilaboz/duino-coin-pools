@@ -74,7 +74,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
     conn.username = username;
     conn.serverMiners = 0
     conn.this_miner_id = 1;
-    conn.verified = "no";
+    conn.verified = "yes";
 
     // remove the main listener to not re-trigger miningHandler()
     conn.removeListener('data', mainListener);
@@ -281,6 +281,8 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
             conn.rejectedShares++;
             conn.write('BAD,Incorrect result\n');
         }
+
+        // console.log(conn.this_miner_id + " : " + reward);
 
         if (conn.acceptedShares > 0 && conn.acceptedShares % updateMinersStatsEvery === 0) {
             if (balancesToUpdate[conn.username])
