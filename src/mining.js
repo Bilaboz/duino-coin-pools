@@ -250,7 +250,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                     } else if (answer[4] != this_miner_chipid) {
                         conn.rejectedShares++;
                     } else {
-                        reward = kolka.V1(hashrate_calc, diff, conn.this_miner_id, reward_div);
+                        reward = kolka.V1(hashrate, diff, conn.this_miner_id, reward_div);
                         conn.acceptedShares++;
                     }
                 } else {

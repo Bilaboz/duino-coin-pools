@@ -10,7 +10,9 @@ const espMiningPercentage = poolRewards["ESP32"]["kolka_decrease_perc"] * 0.01;
 const avrMiningPercentage = poolRewards["AVR"]["kolka_decrease_perc"] * 0.01;
 
 function V1(hashrate, difficulty, workers, reward_div) {
-    let output;
+    let output_base;
+    let output_result;
+    let penalty;
 
     if (workers > 4) {
         workers = workers - 3;
@@ -19,20 +21,22 @@ function V1(hashrate, difficulty, workers, reward_div) {
     }
 
     try {
-        output = Math.log(hashrate) / reward_div;
+        output_base = Math.log(hashrate) / reward_div;
     } catch (err) {
-        output = 0;
+        output_base = 0;
     }
-
     if (difficulty > highestPCdiff) {
-        output = 2 * (output * (Math.pow(pcMiningPercentage, workers - 1)) / (poolRewards["EXTREME"]["reward"] * workers));
+        penalty = Math.pow(pcMiningPercentage, workers - 1);
+        output_result = 2 * ((output_base * penalty) / (poolRewards["EXTREME"]["reward"] * workers));
     } else if (difficulty > poolRewards["ESP32"]["difficulty"]) {
-        output = 2 * (output * (Math.pow(espMiningPercentage, workers - 1)));
+        penalty = Math.pow(espMiningPercentage, workers - 1);
+        output_result = 2 * output_base * penalty;
     } else {
-        output = 2 * (output * (Math.pow(avrMiningPercentage, workers - 1)));
+        penalty = Math.pow(avrMiningPercentage, workers - 1);
+        output_result = 2 * output_base * penalty;
     }
-
-    return output;
+    // console.log('W:'+workers+' / R:'+output_result);
+    return output_result;
 }
 
 function V2(currDiff) {
