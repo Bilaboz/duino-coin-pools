@@ -74,7 +74,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
     conn.username = username;
     conn.serverMiners = 0
     conn.this_miner_id = 1;
-    conn.verified = "no";
 
     // remove the main listener to not re-trigger miningHandler()
     conn.removeListener('data', mainListener);
@@ -128,25 +127,13 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
             }
         }
 
-        if (conn.verified == "yes") {
-            if (conn.remoteAddress != '127.0.0.1') {
-                if (await checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
-                    conn.reject_shares = "Too many workers";
-                }
-            } else {
-                if (await checkWorkers(0, usrWorkers[conn.username], conn.serverMiners)) {
-                    conn.reject_shares = "Too many workers";
-                }
+        if (conn.remoteAddress != '127.0.0.1') {
+            if (await checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
+                conn.reject_shares = "Too many workers";
             }
         } else {
-            if (conn.remoteAddress != '127.0.0.1') {
-                if (await checkWorkers(workers[conn.remoteAddress] * 2, usrWorkers[conn.username] * 2, conn.serverMiners * 2)) {
-                    conn.reject_shares = "Too many workers";
-                }
-            } else {
-                if (await checkWorkers(0, usrWorkers[conn.username] * 2, conn.serverMiners * 2)) {
-                    conn.reject_shares = "Too many workers";
-                }
+            if (await checkWorkers(0, usrWorkers[conn.username], conn.serverMiners)) {
+                conn.reject_shares = "Too many workers";
             }
         }
 
