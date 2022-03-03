@@ -62,7 +62,7 @@ const getRand = (max) => {
     }
 }
 
-const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) => {
+const miningHandler = async (conn, data, mainListener, usingXxhash) => {
     let random, newHash, reqDifficulty;
     let sharetime, this_miner_chipid, minerName;
 
@@ -120,8 +120,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
 
             if (conn.overrideDifficulty) {
                 reqDifficulty = conn.overrideDifficulty;
-            } else if (usingAVR) {
-                reqDifficulty = 'AVR';
             } else {
                 reqDifficulty = data[2] ? data[2] : 'NET';
             }
@@ -175,12 +173,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
 
         let answer = await receiveData(conn);
         answer = answer.split(',');
-
-        if (usingAVR) {
-            miner_res = parseInt(answer[0], 2);
-        } else {
-            miner_res = parseInt(answer[0]);
-        }
         
         try {
             if (diff <= getDiff(poolRewards, 'ESP32')) {

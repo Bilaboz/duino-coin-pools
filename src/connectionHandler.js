@@ -133,7 +133,7 @@ const handle = (conn) => {
                     conn.write(getHttpCode());
                     return conn.destroy();
                 }
-                mining.miningHandler(conn, data, mainListener, false, false);
+                mining.miningHandler(conn, data, mainListener, false);
             }
 
         } else if (data[0] === 'MOTD') {
