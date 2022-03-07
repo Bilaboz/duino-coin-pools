@@ -297,7 +297,12 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
 
             let rigIdentifier;
             try {
-                rigIdentifier = answer[3].match(/[A-Za-z0-9 .()-]+/g).join(' ');
+                const splittedRigID = answer[3].split(":");
+
+                rigIdentifier = splittedRigID[0].match(/[A-Za-z0-9 .()-]+/g).join(' ');
+
+                if (splittedRigID[1]) // mining key backwards compatibility for old miners
+                    miningKey = splittedRigID[1];
             } catch (err) {
                 rigIdentifier = 'None';
             }
