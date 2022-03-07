@@ -1,37 +1,61 @@
+/* Duino-Coin Pool
+For documention about these functions see
+https://github.com/revoxhere/duino-coin/blob/useful-tools
+2019-2021 Duino-Coin community */
+
 const net = require("net");
-
 const handle = require("./connectionHandler");
-const sync = require("./sync");
-const mining = require("./mining");
-
-const { port, host } = require("../config/config.json");
+const sync = require('./sync');
+const { spawn } = require("child_process");
+const log = require("./logging");
+const {
+    use_ngrok,
+    port,
+    host
+} = require("../config/config.json");
 
 connections = 0;
 
+if (use_ngrok) {
+    ngrok = spawn(`./ngrok`, [`tcp`, `-region`, `eu`, `${port}`]);
+
+    ngrok.stderr.on("data", (data) => {
+        log.error(`Ngrok stderr: ${data}`);
+        process.exit(-1);
+    });
+
+    ngrok.on('error', (err) => {
+        log.error(`Ngrok error: ${err}`);
+        process.exit(-1);
+    });
+
+    ngrok.on("close", (code) => {
+        log.error(`Ngrok exited (code ${code})`);
+        process.exit(-1);
+    });
+}
+
 sync.login();
 sync.updatePoolReward();
-//mining.generateJobs();
+
 require("./dashboard");
 
 const server = net.createServer(handle);
-
-server.listen(port, host, () => {
-    console.log(`Server listening on port ${port}\n`);
+server.listen(port, host, 2, () => {
+    log.info(`Server listening on port ${port}\n`);
 })
 
-process.once("SIGINT", async () => { // catch SIGINT
-    console.log("SIGINT detected, closing the server and logging out the pool...");
-    await sync.logout(); // log out the pool from the server, so it doesn't appear online
+process.once("SIGINT", async () => {
+    log.warning("SIGINT detected, closing the server and logging out the pool...");
+    await sync.logout();
     server.close();
-    console.log("done");
     process.exit(0);
 })
 
-process.once("SIGTERM", async () => { // catch SIGTERM
-    console.log("SIGTERM detected, closing the server and logging out the pool...");
-    await sync.logout(); // log out the pool from the server, so it doesn't appear online
+process.once("SIGTERM", async () => {
+    log.warning("SIGTERM detected, closing the server and logging out the pool...");
+    await sync.logout();
     server.close();
-    console.log("done");
     process.exit(0);
 })
 
@@ -39,7 +63,7 @@ setInterval(() => {
     server.getConnections((error, count) => {
         if (!error) {
             connections = count;
-            console.log(`Connections: ${connections}`);
+            log.info(`Connected clients: ${count}`);
         }
     });
 }, 10000);

@@ -1,70 +1,119 @@
 /* Duino-Coin Kolka algorithms and formulas
-   For documention about these functions,
-   see https://github.com/revoxhere/duino-coin/blob/useful-tools/Master_Server/kolka_module.py
-   2019-2021 Duino-Coin community
-*/
+For documention about these functions see
+https://github.com/revoxhere/duino-coin/blob/useful-tools
+2019-2021 Duino-Coin community */
 
+const poolRewards = require("../config/poolRewards.json");
 const highestPCdiff = 150000;
-const highestAVRdiff = 1500;
-const pcMiningPercentage = 0.8;
-const avrMiningPercentage = 0.96;
-const maxAVRHashrate = 250;
-const maxESPHashrate = 11000;
+const pcMiningPercentage = poolRewards["NET"]["kolka_decrease_perc"] * 0.01;
+const espMiningPercentage = poolRewards["ESP32"]["kolka_decrease_perc"] * 0.01;
+const avrMiningPercentage = poolRewards["AVR"]["kolka_decrease_perc"] * 0.01;
 
-function V1(hashrate, difficulty, workers) {
+function V1(hashrate, difficulty, workers, reward_div) {
     let output;
 
-    if (hashrate < maxAVRHashrate) {
-        output = Math.log(hashrate) / 5000;
-    } else if (hashrate < maxESPHashrate) {
-        output = Math.log(hashrate) / 15000;
+    if (workers > 4) {
+        workers = workers - 3;
     } else {
-        output = Math.log(hashrate) / 30000;
+        workers = 1;
+    }
+
+    try {
+        output = Math.log(hashrate) / reward_div;
+    } catch (err) {
+        output = 0;
     }
 
     if (difficulty > highestPCdiff) {
-        output = output + output * (Math.pow(pcMiningPercentage, workers-1)) / 28110;
-    } else if (difficulty > highestAVRdiff) {
-        output = output + output * (Math.pow(pcMiningPercentage, workers-1));
+        output = 2 * (output * (Math.pow(pcMiningPercentage, workers - 1)) / (poolRewards["EXTREME"]["reward"] * workers));
+    } else if (difficulty > poolRewards["ESP32"]["difficulty"]) {
+        output = 2 * (output * (Math.pow(espMiningPercentage, workers - 1)));
     } else {
-        output = output + output * (Math.pow(avrMiningPercentage, workers-1));
+        output = 2 * (output * (Math.pow(avrMiningPercentage, workers - 1)));
     }
 
     return output;
 }
 
 function V2(currDiff) {
-    switch(currDiff) {
-        case "AVR": return "ARM";
-        case "ARM": return "ESP8266"
-        case "ESP8266": return "ESP32"
-        case "ESP32": return "LOW";
-        case "LOW": return "MEDIUM";
-        case "MEDIUM": return "NET";
-        case "NET": return "EXTREME";
+    switch (currDiff) {
+    case "XXHASH":
+        return "XXHASH";
+    case "AVR":
+        return "MEGA";
+    case "MEGA":
+        return "ARM";
+    case "ARM":
+        return "DUE";
+    case "DUE":
+        return "ESP8266";
+    case "ESP8266":
+        return "ESP8266H"
+    case "ESP8266H":
+        return "ESP32"
+    case "ESP32":
+        return "LOW";
+    case "LOW":
+        return "MEDIUM";
+    case "MEDIUM":
+        return "NET";
+    case "NET":
+        return "EXTREME";
+    case "EXTREME":
+        return "EXTREME";
     }
 }
 
-function V3 (sharetime, expectedSharetime, difficulty) {
+function V2_REVERSE(currDiff) {
+    switch (currDiff) {
+    case "XXHASH":
+        return "XXHASH";
+    case "AVR":
+        return "AVR";
+    case "MEGA":
+        return "AVR";
+    case "ARM":
+        return "MEGA";
+    case "DUE":
+        return "ARM";
+    case "ESP8266":
+        return "DUE";
+    case "ESP8266H":
+        return "ESP8266"
+    case "ESP32":
+        return "ESP8266H"
+    case "LOW":
+        return "LOW";
+    case "MEDIUM":
+        return "LOW";
+    case "NET":
+        return "MEDIUM";
+    case "EXTREME":
+        return "NET";
+    }
+}
+
+function V3(sharetime, expectedSharetime, difficulty) {
     const p = 2 - sharetime / expectedSharetime;
     let newDifficulty = difficulty;
 
     if (p < 1 || p > 1.1) {
         newDifficulty = difficulty * p
 
-        if (newDifficulty < 0) {
-            newDifficulty = Math.floor(parseInt(difficulty / (Math.abs(p) + 2)) * 0.9) + 1
-        } else if (newDifficulty === 0) {
-            newDifficulty = difficulty * 0.5
-        }
+            if (newDifficulty < 0) {
+                newDifficulty = Math.floor(parseInt(difficulty / (Math.abs(p) + 2)) * 0.9) + 1
+            } else if (newDifficulty === 0) {
+                newDifficulty = difficulty * 0.5
+            }
     }
 
-    if (newDifficulty <= 2500) newDifficulty = 2500;
+    if (newDifficulty <= 2500)
+        newDifficulty = 2500;
 
     return parseInt(newDifficulty);
 }
 
-function V4 (sharetime, expectedTestSharetime) {
+function V4(sharetime, expectedTestSharetime) {
     const p = sharetime / expectedTestSharetime;
 
     if (p > 1.5) {
@@ -73,8 +122,16 @@ function V4 (sharetime, expectedTestSharetime) {
             penalty: V1(0, sharetime, 0, 0, true)
         }
     } else {
-        return { rejected: false }
+        return {
+            rejected: false
+        }
     }
 }
 
-module.exports = { V1, V2, V3, V4 };
+module.exports = {
+    V1,
+    V2,
+    V2_REVERSE,
+    V3,
+    V4
+};
