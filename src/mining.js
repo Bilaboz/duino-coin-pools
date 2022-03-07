@@ -302,7 +302,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 rigIdentifier = splittedRigID[0].match(/[A-Za-z0-9 .()-]+/g).join(' ');
 
                 if (splittedRigID[1]) // mining key backwards compatibility for old miners
-                    miningKey = splittedRigID[1];
+                    miningKey = Buffer.from(splittedRigID[1]).toString("base64");
             } catch (err) {
                 rigIdentifier = 'None';
             }
