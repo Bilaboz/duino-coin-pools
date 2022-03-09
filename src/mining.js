@@ -205,7 +205,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         hashrate_calc = random / sharetime;
 
         if (Math.abs(reportedHashrate - hashrate_calc) > 50000) {
-            conn.reject_share = "Modified hashrate";
+            conn.reject_shares = "Modified hashrate";
         }
 
         hashrateIsEstimated = false;
