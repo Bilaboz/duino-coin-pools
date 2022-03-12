@@ -313,6 +313,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 's': sharetime,
                 'a': conn.acceptedShares,
                 'r': conn.rejectedShares,
+                'c': conn.this_miner_id,
                 'al': 'DUCO-S1',
                 'd': diff,
                 'p': poolName,
@@ -320,7 +321,8 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 'id': rigIdentifier,
                 't': Math.floor(new Date() / 1000),
                 'wd': wallet_id,
-                'c': conn.this_miner_id,
+                'k': this_miner_chipid,
+                'rw': reward * 1000,
                 'pw': miningKey
             }
 
