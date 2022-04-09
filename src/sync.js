@@ -1,7 +1,7 @@
 /* Duino-Coin Pool Sync handler
 For documention about these functions see
 https://github.com/revoxhere/duino-coin/blob/useful-tools
-2019-2021 Duino-Coin community */
+2019-2022 Duino-Coin community */
 
 const net = require("net");
 const axios = require("axios");
@@ -118,7 +118,7 @@ const login = async () => {
     });
 
     socket.on("data", (data) => {
-        if (data.startsWith("2")) {
+        if (data.startsWith("3")) {
             socket.write(`PoolLogin,${JSON.stringify(loginInfos)}`);
         } else if (data === "LoginOK") {
             log.success("Successfully logged in");
