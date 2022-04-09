@@ -1,7 +1,7 @@
 /* Duino-Coin Mining handler
 For documention about these functions see
 https://github.com/revoxhere/duino-coin/blob/useful-tools
-2019-2021 Duino-Coin community */
+2019-2022 Duino-Coin community */
 
 const crypto = require('crypto');
 const kolka = require('./kolka');
@@ -13,6 +13,7 @@ const {
     initialBlockHash,
     updateMinersStatsEvery,
     serverVersion,
+    max_shares_per_minute,
 } = require('../config/config.json');
 const poolRewards = require("../config/poolRewards.json");
 
@@ -26,6 +27,9 @@ let globalShares = {
     increase: 0,
     total: 0
 };
+if (!max_shares_per_minute) {
+    let max_shares_per_minute = 45;
+}
 
 const getDiff = (poolRewards, textDiff) => {
     try {
@@ -65,7 +69,7 @@ const getRand = (max) => {
 const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) => {
     let random, newHash, reqDifficulty, miningKey;
     let sharetime, this_miner_chipid, minerName;
-
+    
     let isFirstShare = true;
     conn.acceptedShares = 0;
     conn.rejectedShares = 0;
@@ -74,6 +78,8 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
     conn.username = username;
     conn.serverMiners = 0
     conn.this_miner_id = 1;
+    conn.lastminshares = 0;
+    conn.lastsharereset = Math.floor(new Date() / 1000);
 
     // remove the main listener to not re-trigger miningHandler()
     conn.removeListener('data', mainListener);
@@ -109,22 +115,16 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         } else {
             data = await receiveData(conn);
             data = data.split(',');
-            /*if (data[1] != conn.username) {
-                if (data[1] == "DONATE") {
-                    conn.donate = true;
-                }
-                else {
-                    conn.donate = false;
-                }
-            }*/
 
-            if (conn.overrideDifficulty) {
+            if (data[1] != username)
+                conn.reject_shares = "Kolka 4: username change detected";
+
+            if (conn.overrideDifficulty) 
                 reqDifficulty = conn.overrideDifficulty;
-            } else if (usingAVR) {
+            else if (usingAVR)
                 reqDifficulty = 'AVR';
-            } else {
+            else
                 reqDifficulty = data[2] ? data[2] : 'NET';
-            }
         }
 
         if (data[3])
@@ -134,11 +134,11 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
 
         if (conn.remoteAddress != '127.0.0.1') {
             if (await checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
-                conn.reject_shares = "Too many workers";
+                conn.reject_shares = "Kolka 3: too many workers";
             }
         } else {
             if (await checkWorkers(0, usrWorkers[conn.username], conn.serverMiners)) {
-                conn.reject_shares = "Too many workers";
+                conn.reject_shares = "Kolka 3: too many workers";
             }
         }
 
@@ -192,21 +192,25 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 const r =  /[+-]?([0-9][.][0-9])+/;
                 if (parseFloat(answer[2].match(r))
                     && parseFloat(answer[2].match(r)[0]) < parseFloat(serverVersion)) {
-                    conn.reject_shares = "Outdated miner";
+                    conn.reject_shares = "Kolka 4: outdated miner detected";
                 }
             }
         } catch (err) {
             console.log(err)
-            conn.reject_shares = "No miner name";
+            conn.reject_shares = "Kolka 5: no miner name";
         }
 
         sharetime = (new Date().getTime() - sentTimestamp) / 1000;
         reportedHashrate = parseFloat(answer[1]);
         hashrate_calc = random / sharetime;
+        conn.lastminshares++;
 
         if (Math.abs(reportedHashrate - hashrate_calc) > 50000) {
-            conn.reject_shares = "Modified hashrate";
+            conn.reject_shares = "Kolka 2: modified hashrate detected";
         }
+
+        if (conn.lastminshares > max_shares_per_minute)
+            conn.reject_shares = "Kolka 5: modified difficulty detected";
 
         hashrateIsEstimated = false;
         hashrate = hashrate_calc;
@@ -307,7 +311,11 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 rigIdentifier = 'None';
             }
 
-            const minerStats = {
+            if ((Math.floor(new Date() / 1000) - conn.lastsharereset) >= 60)
+                conn.lastsharereset = Math.floor(new Date() / 1000);
+                conn.lastminshares = 0;
+
+            minersStats[conn.id] = {
                 'u': conn.username,
                 'h': hashrateIsEstimated ? hashrate : reportedHashrate,
                 's': sharetime,
@@ -323,10 +331,9 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 'wd': wallet_id,
                 'k': this_miner_chipid,
                 'rw': reward * 1000,
-                'pw': miningKey
+                'pw': miningKey,
+                'ls': conn.lastminshares,
             }
-
-            minersStats[conn.id] = minerStats;
 
             lastBlockhash = newHash;
             globalShares.increase += updateMinersStatsEvery;
