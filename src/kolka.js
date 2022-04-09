@@ -1,7 +1,7 @@
 /* Duino-Coin Kolka algorithms and formulas
 For documention about these functions see
 https://github.com/revoxhere/duino-coin/blob/useful-tools
-2019-2021 Duino-Coin community */
+2019-2022 Duino-Coin community */
 
 const poolRewards = require("../config/poolRewards.json");
 const highestPCdiff = 150000;
