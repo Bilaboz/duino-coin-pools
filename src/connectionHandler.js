@@ -110,8 +110,7 @@ const handle = (conn) => {
 
         /* Username ban check */
         if (bans.bannedUsernames.includes(data[1]) && conn.remoteAddress != "127.0.0.1"
-            && !bans.bannedIPs.includes(conn.remoteAddress))
-        {
+            && !bans.bannedIPs.includes(conn.remoteAddress)) {
             bans.bannedIPs.push(conn.remoteAddress);
             try {
                 fs.writeFileSync('./config/bans.json', JSON.stringify(bans, null, 0));
