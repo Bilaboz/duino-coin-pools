@@ -132,6 +132,16 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         else
             miningKey = null;
 
+        if (data[4]) {
+            if (data[4].match(/^[\w@.-]+$/) && data[4].length < 32) {
+                conn.iot_reading = data[4];
+            } else {
+                conn.iot_reading = "-1@-1"
+            }
+        } else {
+            conn.iot_reading = null;
+        }
+
         if (conn.remoteAddress != '127.0.0.1') {
             if (await checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
                 conn.reject_shares = "Kolka 3: too many workers";
@@ -196,7 +206,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 }
             }
         } catch (err) {
-            console.log(err)
             conn.reject_shares = "Kolka 5: no miner name";
         }
 
@@ -333,6 +342,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 'rw': reward * 1000,
                 'pw': miningKey,
                 'ls': conn.lastminshares,
+                'it': conn.iot_reading
             }
 
             lastBlockhash = newHash;
