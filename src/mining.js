@@ -29,6 +29,7 @@ let globalShares = {
 };
 if (!max_shares_per_minute) {
     let max_shares_per_minute = 45;
+    console.log("Defaulting to 45 max shares/min");
 }
 
 const getDiff = (poolRewards, textDiff) => {
@@ -320,9 +321,10 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 rigIdentifier = 'None';
             }
 
-            if ((Math.floor(new Date() / 1000) - conn.lastsharereset) >= 60)
+            if ((Math.floor(new Date() / 1000) - conn.lastsharereset) >= 60) {
                 conn.lastsharereset = Math.floor(new Date() / 1000);
                 conn.lastminshares = 0;
+            }
 
             minersStats[conn.id] = {
                 'u': conn.username,
