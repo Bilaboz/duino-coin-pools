@@ -28,8 +28,8 @@ let globalShares = {
     total: 0
 };
 if (!max_shares_per_minute) {
-    let max_shares_per_minute = 45;
-    console.log("Defaulting to 45 max shares/min");
+    let max_shares_per_minute = 60;
+    console.log("Defaulting to 60 max shares/min");
 }
 
 const getDiff = (poolRewards, textDiff) => {
@@ -65,6 +65,12 @@ const getRand = (max) => {
         console.log(err);
         return Math.floor(Math.random() * max);
     }
+}
+
+const percDiff = (a, b) => {
+    return  100 * Math.abs(
+        (a - b) / ((a + b) / 2)
+    );
 }
 
 const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) => {
@@ -215,12 +221,13 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         hashrate_calc = random / sharetime;
         conn.lastminshares++;
 
-        if (Math.abs(reportedHashrate - hashrate_calc) > 50000) {
+        if (percDiff(reportedHashrate, hashrate_calc) > 40) {
             conn.reject_shares = "Kolka 2: modified hashrate detected";
         }
 
-        if (conn.lastminshares > max_shares_per_minute)
+        if (conn.lastminshares > max_shares_per_minute) {
             conn.reject_shares = "Kolka 5: modified difficulty detected";
+        }
 
         hashrateIsEstimated = false;
         hashrate = hashrate_calc;
