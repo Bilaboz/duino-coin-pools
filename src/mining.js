@@ -16,6 +16,7 @@ const {
     max_shares_per_minute,
 } = require('../config/config.json');
 const poolRewards = require("../config/poolRewards.json");
+const algo = 'DUCO-S1';
 
 let lastBlockhash = initialBlockHash;
 globalBlocks = [];
@@ -28,8 +29,8 @@ let globalShares = {
     total: 0
 };
 if (!max_shares_per_minute) {
-    let max_shares_per_minute = 60;
-    console.log("Defaulting to 60 max shares/min");
+    let max_shares_per_minute = 90;
+    console.log("Defaulting to 90 max shares/min");
 }
 
 const getDiff = (poolRewards, textDiff) => {
@@ -84,7 +85,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
     const username = data[1];
     conn.username = username;
     conn.serverMiners = 0
-    conn.this_miner_id = 1;
+    conn.this_miner_id = 0;
     conn.lastminshares = 0;
     conn.lastsharereset = Math.floor(new Date() / 1000);
 
@@ -113,11 +114,11 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 conn.this_miner_id = Math.max(
                         usrWorkers[conn.username],
                         workers[conn.remoteAddress],
-                        conn.serverMiners) + 1
+                        conn.serverMiners)
             } else {
                 conn.this_miner_id = Math.max(
                         usrWorkers[conn.username],
-                        0, conn.serverMiners) + 1
+                        conn.serverMiners)
             }
         } else {
             data = await receiveData(conn);
@@ -221,7 +222,7 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
         hashrate_calc = random / sharetime;
         conn.lastminshares++;
 
-        if (percDiff(reportedHashrate, hashrate_calc) > 40) {
+        if (percDiff(reportedHashrate, hashrate_calc) > 500) {
             conn.reject_shares = "Kolka 2: modified hashrate detected";
         }
 
@@ -333,25 +334,32 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 conn.lastminshares = 0;
             }
 
+
+            if (conn.this_miner_id > 4) {
+                kolka_drop = conn.this_miner_id - 3;
+            } else {
+                kolka_drop = 1;
+            }
+
             minersStats[conn.id] = {
-                'u': conn.username,
-                'h': hashrateIsEstimated ? hashrate : reportedHashrate,
-                's': sharetime,
-                'a': conn.acceptedShares,
-                'r': conn.rejectedShares,
-                'c': conn.this_miner_id,
-                'al': 'DUCO-S1',
-                'd': diff,
-                'p': poolName,
+                'u':   conn.username,
+                'h':   hashrateIsEstimated ? hashrate : reportedHashrate,
+                's':   sharetime,
+                'a':   conn.acceptedShares,
+                'r':   conn.rejectedShares,
+                'c':   kolka_drop,
+                'al':  algo,
+                'd':   diff,
+                'p':   poolName,
                 'sft': minerName,
-                'id': rigIdentifier,
-                't': Math.floor(new Date() / 1000),
-                'wd': wallet_id,
-                'k': this_miner_chipid,
-                'rw': reward * 1000,
-                'pw': miningKey,
-                'ls': conn.lastminshares,
-                'it': conn.iot_reading
+                'id':  rigIdentifier,
+                't':   Math.floor(new Date() / 1000),
+                'wd':  wallet_id,
+                'k':   this_miner_chipid,
+                'rw':  reward * 1000,
+                'pw':  miningKey,
+                'ls':  conn.lastminshares,
+                'it':  conn.iot_reading
             }
 
             lastBlockhash = newHash;
