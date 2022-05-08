@@ -146,8 +146,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
             else conn.iot_reading = data[4];
         } else conn.iot_reading = null;
 
-        console.log(conn.iot_reading);
-
         if (conn.remoteAddress != '127.0.0.1') {
             if (await checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
                 conn.reject_shares = "Kolka 3: too many workers";
