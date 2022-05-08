@@ -141,14 +141,12 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
             miningKey = null;
 
         if (data[4]) {
-            if (data[4].match(/^[\w@.-]+$/) && data[4].length < 32) {
-                conn.iot_reading = data[4];
-            } else {
-                conn.iot_reading = "-1@-1"
-            }
-        } else {
-            conn.iot_reading = null;
-        }
+            if (!data[4].match(/[A-Za-z0-9 .():@-]+/)) conn.iot_reading = "Error:incorrect data";
+            else if (data[4].length > 48) conn.iot_reading = "Error:data too long";
+            else conn.iot_reading = data[4];
+        } else conn.iot_reading = null;
+
+        console.log(conn.iot_reading);
 
         if (conn.remoteAddress != '127.0.0.1') {
             if (await checkWorkers(workers[conn.remoteAddress], usrWorkers[conn.username], conn.serverMiners)) {
