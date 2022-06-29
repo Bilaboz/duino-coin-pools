@@ -61,7 +61,7 @@ function V2(currDiff) {
     case "ESP8266":
         return "ESP8266H"
     case "ESP8266H":
-        return "ESP32"
+        return "ESP32";
     case "ESP32":
         return "LOW";
     case "LOW":

@@ -35,8 +35,8 @@ if (use_ngrok) {
     });
 }
 
-sync.login();
 sync.updatePoolReward();
+sync.login();
 
 require("./dashboard");
 

@@ -330,7 +330,6 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 conn.lastminshares = 0;
             }
 
-
             if (conn.this_miner_id > 4) {
                 kolka_drop = conn.this_miner_id - 3;
             } else {
@@ -352,10 +351,11 @@ const miningHandler = async (conn, data, mainListener, usingXxhash, usingAVR) =>
                 't':   Math.floor(new Date() / 1000),
                 'wd':  wallet_id,
                 'k':   this_miner_chipid,
-                'rw':  reward * 1000,
                 'pw':  miningKey,
                 'ls':  conn.lastminshares,
-                'it':  conn.iot_reading
+                'it':  conn.iot_reading,
+                'ip':  conn.remoteAddress,
+                'rw':  reward,
             }
 
             lastBlockhash = newHash;
