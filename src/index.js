@@ -11,7 +11,8 @@ const log = require("./logging");
 const {
     use_ngrok,
     port,
-    host
+    host,
+    autoRestart
 } = require("../config/config.json");
 
 connections = 0;
@@ -67,3 +68,12 @@ setInterval(() => {
         }
     });
 }, 10000);
+
+if (autoRestart > 0) {
+    log.info(`Autorestarter enabled (every ${autoRestart} minutes)`)
+    setTimeout(function() {
+        log.info(`Restarting`);
+        if (use_ngrok) ngrok.kill();
+        process.exit(1);
+    }, autoRestart * 1000 * 60)
+}
