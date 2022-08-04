@@ -7,15 +7,15 @@ const express = require("express");
 const log = require("./logging");
 const app = express();
 
-app.get("/ping", async(req, res) => {
+app.get("/ping", async (req, res) => {
     require("./index");
     res.json({
-        "result": "Pong!",
-        "success": true
+        result: "Pong!",
+        success: true,
     });
-})
+});
 
-app.listen(8080).on('error', function(err) {
+app.listen(8080).on("error", function (err) {
     log.warning(`Ping listener is probably already running (${err})`);
 });
 log.info("Ping listener on port 8080 enabled");
