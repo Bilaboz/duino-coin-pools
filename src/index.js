@@ -13,7 +13,7 @@ const { use_ngrok, port, host, autoRestart } = require("../config/config.json");
 connections = 0;
 
 if (use_ngrok) {
-    ngrok = spawn(`./ngrok`, [`tcp`, `-region`, `eu`, `${port}`]);
+    ngrok = spawn(`./ngrok`, [`tcp`, `--region`, `eu`, `${port}`]);
 
     ngrok.stderr.on("data", (data) => {
         log.error(`Ngrok stderr: ${data}`);
