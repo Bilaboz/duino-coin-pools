@@ -73,25 +73,10 @@ const percDiff = (a, b) => {
     return Math.floor(100 * Math.abs((a - b) / ((a + b) / 2)));
 };
 
-async function ping_test(conn) {
-    const shasum = crypto.createHash("sha1");
-    shasum.update(lastBlockhash + "1");
-    newHash = shasum.digest("hex");
-    let test_job = [lastBlockhash, newHash.toString(), "100"];
-
-    conn.write(test_job.toString() + "\n");
-    let firstShareStart = new Date();
-
-    await receiveData(conn);
-    let firstShareStop = new Date();
-
-    conn.write("GOOD\n");
-    return (firstShareStop - firstShareStart) / 1000;
-}
-
 const miningHandler = async (conn, data, mainListener, usingAVR) => {
     let random, newHash, reqDifficulty, miningKey;
     let this_miner_chipid, minerName, sharetime;
+    let feedback_sent = 0;
 
     let isFirstShare = true;
     conn.acceptedShares = 0;
@@ -103,7 +88,7 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
     conn.this_miner_id = 0;
     conn.lastminshares = 0;
     conn.lastsharereset = Math.floor(new Date() / 1000);
-    conn.ping = await ping_test(conn);
+    conn.ping = 0;
 
     // remove the main listener to not re-trigger miningHandler()
     conn.removeListener("data", mainListener);
@@ -112,9 +97,6 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
         conn.donate = false;
 
         if (isFirstShare) {
-            data = await receiveData(conn);
-            data = data.split(",");
-
             reqDifficulty = data[2] ? data[2] : "NET";
 
             if (reqDifficulty == "ESP32") worker_add = 0.5;
@@ -147,6 +129,7 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
         } else {
             data = await receiveData(conn);
             data = data.split(",");
+            conn.ping = (new Date() - feedback_sent) / 1000;
 
             if (data[1] != username) conn.reject_shares = "Username changed";
 
@@ -311,14 +294,17 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
 
         if (conn.reject_shares) {
             conn.write(`BAD,${conn.reject_shares}\n`);
+            feedback_sent = new Date();
         } else if (hashrate < minHashrate) {
             conn.overrideDifficulty = kolka.V2_REVERSE(reqDifficulty);
             conn.rejectedShares++;
             conn.write("BAD,Too high starting difficulty\n");
+            feedback_sent = new Date();
         } else if (hashrate >= maxHashrate) {
             conn.overrideDifficulty = kolka.V2(reqDifficulty);
             conn.rejectedShares++;
             conn.write("BAD,Too low starting difficulty\n");
+            feedback_sent = new Date();
         } else if (miner_res === random) {
             conn.acceptedShares++;
             if (conn.acceptedShares > 5) {
@@ -359,10 +345,15 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
                 globalBlocks.push(blockInfos);
                 log.info(`Block found by ${conn.username}`);
                 conn.write("BLOCK\n");
-            } else conn.write("GOOD\n");
+                feedback_sent = new Date();
+            } else {
+                conn.write("GOOD\n");
+                feedback_sent = new Date();
+            }
         } else {
             conn.rejectedShares++;
             conn.write("BAD,Incorrect result\n");
+            feedback_sent = new Date();
         }
 
         if (
