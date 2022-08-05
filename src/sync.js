@@ -52,7 +52,7 @@ const get_ngrok_ip = async () => {
         await wait(1000);
         try {
             let res = await axios.get(
-                "http://localhost:4040/api/tunnels/command_line",
+                "http://127.0.0.1:4040/api/tunnels/command_line",
                 {
                     timeout: TIMEOUT,
                 }

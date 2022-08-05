@@ -294,9 +294,10 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
         if (isFirstShare) this_miner_chipid = answer[4];
 
         if (
+            diff > getDiff(poolRewards, "DUE") &&
             diff <= getDiff(poolRewards, "ESP8266NH") &&
             percDiff(hashrate, hashrate_calc) > 15 &&
-            sharetime >= 1
+            sharetime >= 1.5
         ) {
             conn.reject_shares = "Modified hashrate";
         }
