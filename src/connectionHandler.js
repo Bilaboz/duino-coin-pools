@@ -14,9 +14,9 @@ const { motd, serverVersion } = require("../config/config.json");
 const ban_ip = (ip) => {
     // uncomment the correct command for your firewall
     //const cmd = `csf -td ${ip}`; //csf
-    const cmd = `iptables -A INPUT -s ${ip} -j DROP`; //iptables
+    //const cmd = `iptables -A INPUT -s ${ip} -j DROP`; //iptables
     //const cmd = `sudo ufw deny from ${ip} to any`; //ufw
-    //const cmd = '' //none
+    const cmd = '' //none
 
     if (cmd) {
         exec(cmd, (error) => {
