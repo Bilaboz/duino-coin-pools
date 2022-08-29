@@ -227,9 +227,9 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
         conn.lastminshares++;
 
         if (!isFirstShare) {
-            timeout_calc = ((random * sharetime) / hashrate_calc + 20) * 1000;
+            timeout_calc = ((random * sharetime) / hashrate_calc + 60) * 1000;
             if (timeout_calc > 360 * 1000) timeout_calc = 360 * 1000;
-            if (timeout_calc <= 0) timeout_calc = 30 * 1000;
+            if (timeout_calc <= 0) timeout_calc = 60 * 1000;
 
             try {
                 conn.setTimeout(timeout_calc);
