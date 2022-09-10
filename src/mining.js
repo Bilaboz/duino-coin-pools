@@ -4,6 +4,7 @@ https://github.com/revoxhere/duino-coin/blob/useful-tools
 2019-2022 Duino-Coin community */
 
 const crypto = require("crypto");
+const request = require('sync-request');
 const kolka = require("./kolka");
 const log = require("./logging");
 const {
@@ -29,8 +30,7 @@ let globalShares = {
     total: 0,
 };
 if (!max_shares_per_minute) {
-    let max_shares_per_minute = 90;
-    console.log("Defaulting to 90 max shares/min");
+    let max_shares_per_minute = 70;
 }
 
 const getDiff = (poolRewards, textDiff) => {
@@ -42,11 +42,29 @@ const getDiff = (poolRewards, textDiff) => {
     }
 };
 
-const checkWorkers = (ipWorkers, usrWorkers, serverMiners) => {
+const checkWorkers = (ipWorkers, usrWorkers, serverMiners, username) => {
     if (maxWorkers <= 0) return false;
 
     if (Math.max(ipWorkers, usrWorkers, serverMiners) > maxWorkers) {
-        return true;
+        /* Check if user has worker limit upgrades */
+        res = request('GET', `https://server.duinocoin.com/v2/users/${username}`)
+        userItems = JSON.parse(res.getBody('utf8')).result.items;
+
+        if (userItems.includes(10) && userItems.includes(11)) {
+            if (Math.max(ipWorkers, usrWorkers, serverMiners) > 125) {
+                return true
+            }
+        } else if (userItems.includes(11)) {
+            if (Math.max(ipWorkers, usrWorkers, serverMiners) > 100) {
+                return true
+            }
+        } else if (userItems.includes(10)) {
+            if (Math.max(ipWorkers, usrWorkers, serverMiners) > 75) {
+                return true
+            }
+        } else {
+            return true
+        }
     }
     return false;
 };
@@ -126,6 +144,7 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
                     conn.serverMiners
                 );
             }
+            conn.setTimeout(90 * 1000);
         } else {
             data = await receiveData(conn);
             data = data.split(",");
@@ -155,7 +174,8 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
                 await checkWorkers(
                     workers[conn.remoteAddress],
                     usrWorkers[conn.username],
-                    conn.serverMiners
+                    conn.serverMiners,
+                    conn.username
                 )
             ) {
                 conn.reject_shares = "Too many workers";
@@ -165,7 +185,8 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
                 await checkWorkers(
                     0,
                     usrWorkers[conn.username],
-                    conn.serverMiners
+                    conn.serverMiners,
+                    conn.username
                 )
             ) {
                 conn.reject_shares = "Too many workers";
@@ -226,24 +247,6 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
 
         conn.lastminshares++;
 
-        if (!isFirstShare) {
-            timeout_calc = ((random * sharetime) / hashrate_calc + 20) * 1000;
-            if (timeout_calc > 360 * 1000) timeout_calc = 360 * 1000;
-            if (timeout_calc <= 0) timeout_calc = 30 * 1000;
-
-            try {
-                conn.setTimeout(timeout_calc);
-            } catch(err) {
-                conn.setTimeout(60 * 1000);
-            }
-        } else {
-            if (diff <= getDiff(poolRewards, "ESP8266NH")) {
-                conn.setTimeout(60 * 1000);
-            } else {
-                conn.setTimeout(90 * 1000);
-            }
-        }
-
         if (usingAVR) {
             miner_res = parseInt(answer[0], 2);
         } else {
@@ -266,7 +269,7 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
         } */
 
         if (conn.lastminshares > max_shares_per_minute) {
-            conn.reject_shares = "Modified difficulty";
+            conn.reject_shares = "Too low difficulty";
         }
 
         hashrateIsEstimated = false;
@@ -307,7 +310,7 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
             feedback_sent = new Date();
         } else if (miner_res === random) {
             conn.acceptedShares++;
-            if (conn.acceptedShares > 5) {
+            if (conn.acceptedShares > 10) {
                 if (diff <= getDiff(poolRewards, "ESP8266NH")) {
                     if (!this_miner_chipid) {
                         conn.rejectedShares++;
