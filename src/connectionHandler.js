@@ -11,6 +11,15 @@ const { exec } = require("child_process");
 const bans = require("../config/bans.json");
 const { motd, serverVersion } = require("../config/config.json");
 
+if (bans.bannedIPs.length > 10) {
+    bans.bannedIPs = [];
+    fs.writeFileSync(
+        "./config/bans.json",
+        JSON.stringify(bans, null, 0)
+    );
+    log.info(`Cleared bans`);
+}
+
 const ban_ip = (ip) => {
     // uncomment the correct command for your firewall
     //const cmd = `csf -td ${ip}`; //csf
@@ -31,9 +40,9 @@ const ban_ip = (ip) => {
 };
 
 const handle = (conn) => {
-    conn.id = crypto.randomBytes(4).toString("hex");
+    conn.id = crypto.randomBytes(8).toString("hex");
     try {
-        conn.setTimeout(20 * 1000);
+        conn.setTimeout(30 * 1000);
         conn.setEncoding("ascii");
         conn.write(serverVersion + "\n");
     } catch (err) {
@@ -57,8 +66,7 @@ const handle = (conn) => {
     });
 
     conn.on("error", (err) => {
-        if (err.code !== "ECONNRESET") {
-        }
+        if (err.code !== "ECONNRESET") {}
     });
 
     conn.on("timeout", () => {
@@ -69,6 +77,7 @@ const handle = (conn) => {
         data = data.trim().split(",");
 
         if (!conn.remoteAddress || data.length > 6) {
+            conn.write("BAD,Incorrect data\n");
             return conn.destroy();
         }
 
@@ -77,6 +86,7 @@ const handle = (conn) => {
             bans.bannedIPs.includes(conn.remoteAddress) &&
             conn.remoteAddress != "127.0.0.1"
         ) {
+            conn.write("BAD,User banned\n");
             ban_ip(conn.remoteAddress);
             return conn.destroy();
         }
@@ -96,6 +106,7 @@ const handle = (conn) => {
             } catch (err) {
                 console.log(err);
             }
+            conn.write("BAD,User banned\n");
             ban_ip(conn.remoteAddress);
             return conn.destroy();
         }
