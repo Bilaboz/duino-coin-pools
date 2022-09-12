@@ -24,6 +24,7 @@ globalBlocks = [];
 let workers = {};
 let usrWorkers = {};
 let minersStats = {};
+let cachedItems = {};
 let balancesToUpdate = {};
 let globalShares = {
     increase: 0,
@@ -47,8 +48,13 @@ const checkWorkers = (ipWorkers, usrWorkers, serverMiners, username) => {
 
     if (Math.max(ipWorkers, usrWorkers, serverMiners) > maxWorkers) {
         /* Check if user has worker limit upgrades */
-        res = request('GET', `https://server.duinocoin.com/v2/users/${username}`)
-        userItems = JSON.parse(res.getBody('utf8')).result.items;
+        if (!cachedItems.hasOwnProperty(username) && getRand(50) != 10) {
+            res = request('GET', `https://server.duinocoin.com/v2/users/${username}`)
+            userItems = JSON.parse(res.getBody('utf8')).result.items;
+            cachedItems[username] = userItems;
+        } else {
+            userItems = cachedItems[username];
+        }
 
         if (userItems.includes(10) && userItems.includes(11)) {
             if (Math.max(ipWorkers, usrWorkers, serverMiners) > 125) {
