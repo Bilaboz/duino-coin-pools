@@ -1,7 +1,7 @@
 /* Duino-Coin Mining handler
 For documention about these functions see
 https://github.com/revoxhere/duino-coin/blob/useful-tools
-2019-2022 Duino-Coin community */
+2019-2023 Duino-Coin community */
 
 const crypto = require("crypto");
 const request = require('sync-request');
@@ -31,7 +31,7 @@ let globalShares = {
     total: 0,
 };
 if (!max_shares_per_minute) {
-    let max_shares_per_minute = 70;
+    let max_shares_per_minute = 80;
 }
 
 const getDiff = (poolRewards, textDiff) => {
@@ -155,8 +155,6 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
             data = await receiveData(conn);
             data = data.split(",");
             conn.ping = (new Date() - feedback_sent) / 1000;
-
-            if (data[1] != username) conn.reject_shares = "Username changed";
 
             if (conn.overrideDifficulty)
                 reqDifficulty = conn.overrideDifficulty;
