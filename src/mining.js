@@ -251,10 +251,9 @@ const miningHandler = async (conn, data, mainListener, usingAVR) => {
 
         conn.lastminshares++;
 
+        let miner_res = parseInt(answer[0]);
         if (usingAVR) {
             miner_res = parseInt(answer[0], 2);
-        } else {
-            miner_res = parseInt(answer[0]);
         }
 
         /* try {
