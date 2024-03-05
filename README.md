@@ -1,4 +1,4 @@
-<h1 align="center">Welcome to duino-pools 👋</h1>
+<h1 align="center">Welcome to duino-coin-pools 👋</h1>
 <p align ="center">
     <img src="https://img.shields.io/badge/node-%3E%3D16.0.0-blue.svg?logo=node.js&logoColor=white" />
     <img alt="Maintenance" src="https://img.shields.io/badge/maintained-yes-green.svg" />
